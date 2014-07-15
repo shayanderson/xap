@@ -1,6 +1,6 @@
 # Xap
 #### MySQL Rapid Development Engine for PHP 5.5.0+
-Requirements:
+Xap Requirements:
 
 1. PHP 5.5.0+
 2. PHP [PDO database extension](http://www.php.net/manual/en/book.pdo.php)
@@ -104,6 +104,11 @@ if($r) echo $r->fullname;
 // SELECT fullname, is_active FROM users WHERE id = '2' AND fullname = 'Shay'
 $r = xap('users(fullname, is_active).2 WHERE fullname = ? LIMIT 1', ['Name']);
 ```
+> Query options can be used when selecting with key like:
+```php
+$r = xap('users.14/query');
+```
+
 When selecting with key use integer values only, for example:
 ```php
 $r = xap('users.' . (int)$id);
