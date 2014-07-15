@@ -77,6 +77,7 @@ Simple select queries examples:
 $r = xap('users'); // SELECT * FROM users
 $r = xap('users(fullname, email)'); // SELECT fullname, email FROM users
 $r = xap('users LIMIT 1'); // SELECT * FROM users LIMIT 1
+$r = xap('users WHERE is_active = 1'); // SELECT * FROM users WHERE is_active = 1
 ```
 
 #### Select Where
@@ -106,7 +107,7 @@ $r = xap('users(fullname, is_active).2 WHERE fullname = ? LIMIT 1', ['Name']);
 ```
 > Query options can be used when selecting with key like:
 ```php
-$r = xap('users.14/query');
+$q = xap('users.14/query');
 ```
 
 When selecting with key use integer values only, for example:
