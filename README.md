@@ -1,6 +1,6 @@
 # Xap
 #### MySQL Rapid Development Engine for PHP 5.5.0+
-Xap Requirements:
+Xap (pronounced *zap*) requirements:
 
 1. PHP 5.5.0+
 2. PHP [PDO database extension](http://www.php.net/manual/en/book.pdo.php)
