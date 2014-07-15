@@ -390,6 +390,7 @@ The `query` option can be used to return the query string only, without executin
 ```php
 $r = xap('users(fullname)/distinct/query'); // returns string 'SELECT DISTINCT fullname FROM users'
 ```
+> The following commands can use the `query` option: `add`, `call`, `columns`, `count`, `del`, `mod`, `query`, `replace`, and `tables`
 
 ##### First Option
 The `first` option can be used to return the first record only, for example:
