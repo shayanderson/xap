@@ -132,7 +132,6 @@ The `replace` command can also be used, for example:
 $affected_rows = xap('users:replace', ['id' => 5 'fullname' => 'Name Here',
 	'is_active' => 1, 'created' => ['NOW()']]);
 ```
-> When using the `mod`, `insert` or `replace` command all params must be *named* params like `:my_param` and *not* question mark parameters
 
 #### Insert with Insert ID
 Insert query and get insert ID:
@@ -175,6 +174,7 @@ $affected_rows = xap('users:mod WHERE user_id = :user_id', ['fullname' => 'Shay 
 // can also use action ':update'
 // xap('users:update', ...);
 ```
+> When using the `mod` (or `update`) command all params must be *named* params like `:my_param` and *not* question mark parameters
 
 #### Update Ignore
 Update ignore query example:
