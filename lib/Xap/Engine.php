@@ -1,0 +1,986 @@
+<?php
+/**
+ * Xap - MySQL Rapid Development Engine for PHP 5.5.0+
+ *
+ * @package Xap
+ * @version 0.0.1
+ * @copyright 2014 Shay Anderson <http://www.shayanderson.com>
+ * @license MIT License <http://www.opensource.org/licenses/mit-license.php>
+ * @link <https://github.com/shayanderson/xap>
+ */
+namespace Xap;
+
+/**
+ * Xap Engine class
+ *
+ * @author Shay Anderson 07.14 <http://www.shayanderson.com/contact>
+ */
+class Engine
+{
+	/**
+	 * Default primary key column name
+	 */
+	const DEFAULT_PRIMARY_KEY = 'id';
+
+	/**
+	 * Command part keys
+	 */
+	const
+		KEY_CMD = 1,
+		KEY_CMD_COLUMNS = 2,
+		KEY_CMD_CONN_ID = 3,
+		KEY_CMD_ID = 4,
+		KEY_CMD_OPTIONS = 5,
+		KEY_CMD_SQL = 6,
+		KEY_CMD_TABLE = 7;
+
+	/**
+	 * Configuration keys
+	 */
+	const
+		KEY_CONF_DEBUG = 'debug',
+		KEY_CONF_ERROR_HANDLER = 'error_handler',
+		KEY_CONF_ERRORS = 'errors',
+		KEY_CONF_LOG_HANDLER = 'log_handler',
+		KEY_CONF_OBJECTS = 'objects';
+
+	/**
+	 * Connection keys
+	 */
+	const
+		KEY_CONN_DATABASE = 'database',
+		KEY_CONN_HOST = 'host',
+		KEY_CONN_ID = 'id',
+		KEY_CONN_PASSWORD = 'password',
+		KEY_CONN_USER = 'user';
+
+	/**
+	 * Pagination keys
+	 */
+	const
+		KEY_PAGE_NEXT = 1,
+		KEY_PAGE_OFFSET = 2,
+		KEY_PAGE_PAGE = 'page',
+		KEY_PAGE_PREV = 3,
+		KEY_PAGE_RPP = 'rpp';
+
+	/**
+	 * Query options
+	 */
+	const
+		OPT_FIRST = 0x1,
+		OPT_PAGINATION = 0x2,
+		OPT_QUERY = 0x4;
+
+	/**
+	 * Connections
+	 *
+	 * @var array
+	 */
+	private static $__connections = [];
+
+	/**
+	 * Configuration settings
+	 *
+	 * @var array
+	 */
+	private $__conf = [];
+
+	/**
+	 * Last error message (when error occurs)
+	 *
+	 * @var string (or null when no error)
+	 */
+	private $__error;
+
+	/**
+	 * Connection ID
+	 *
+	 * @var int
+	 */
+	private $__id;
+
+	/**
+	 * Table name to primary key column name map
+	 *
+	 * @var array
+	 */
+	private $__key_map;
+
+	/**
+	 * Debug log
+	 *
+	 * @var array
+	 */
+	private $__log = [];
+
+	/**
+	 * PDO object
+	 *
+	 * @var \PDO
+	 */
+	private $__pdo;
+
+	/**
+	 * Init (internal only)
+	 *
+	 * @param array $connection
+	 */
+	private function __construct(array $connection)
+	{
+		// init config
+		$this->__conf = [
+			self::KEY_CONF_DEBUG => true,
+			self::KEY_CONF_ERROR_HANDLER => null,
+			self::KEY_CONF_ERRORS => true,
+			self::KEY_CONF_LOG_HANDLER => null,
+			self::KEY_CONF_OBJECTS => true
+		];
+
+		$this->__id = $connection[self::KEY_CONN_ID];
+
+		foreach($connection as $k => $v) // config setter
+		{
+			if(isset($this->__conf[$k]) || array_key_exists($k, $this->__conf))
+			{
+				if(($k === self::KEY_CONF_ERROR_HANDLER || $k === self::KEY_CONF_LOG_HANDLER) && !is_callable($v))
+				{
+					continue; // handlers must be callable
+				}
+
+				$this->__conf[$k] = $v;
+			}
+		}
+
+		$this->__getPdo($connection); // set PDO object
+	}
+
+	/**
+	 * Trigger error
+	 *
+	 * @param string $message
+	 * @return void
+	 * @throws \Exception
+	 */
+	private function __error($message)
+	{
+		$this->__error = $message;
+
+		if($this->__conf[self::KEY_CONF_ERRORS])
+		{
+			if($this->__conf[self::KEY_CONF_ERROR_HANDLER] !== null)
+			{
+				$this->__conf[self::KEY_CONF_ERROR_HANDLER]($message); // custom error handler
+			}
+			else
+			{
+				$this->__log('Error: ' . $message);
+
+				if($this->__conf[self::KEY_CONF_DEBUG] && $this->__conf[self::KEY_CONF_LOG_HANDLER] === null)
+				{
+					print_r($this->getLog()); // print debug log
+				}
+
+				throw new \Exception(__NAMESPACE__ . ': ' . $message);
+			}
+		}
+	}
+
+	/**
+	 * PDO connection getter
+	 *
+	 * @param int $id
+	 * @return \self
+	 * @throws \Exception (when connection does not exist)
+	 */
+	private static function &__getConnection($id)
+	{
+		if(self::__isConnection($id))
+		{
+			return self::$__connections[$id];
+		}
+
+		throw new \Exception('Connection ID \'' . $id . '\' does not exist');
+	}
+
+	/**
+	 * PDO object getter (lazy loader) and connection data setter
+	 *
+	 * @staticvar array $hosts
+	 * @param mixed $connection (array when connection setter, null for getter)
+	 * @return \PDO (or null on connection setter)
+	 */
+	public function &__getPdo($connection = null)
+	{
+		static $hosts = [];
+
+		if($connection !== null) // register
+		{
+			$hosts[$this->__id] = $connection;
+
+			$this->__log('Connection \'' . $this->__id . '\' registered (host: \'' . $connection[self::KEY_CONN_HOST]
+				. '\', database: \'' . $connection[self::KEY_CONN_DATABASE] . '\')');
+		}
+		else if($this->__pdo === null) // init
+		{
+			try
+			{
+				$this->__pdo = new \PDO('mysql:host=' . $hosts[$this->__id][self::KEY_CONN_HOST] . ';dbname='
+					. $hosts[$this->__id][self::KEY_CONN_DATABASE], $hosts[$this->__id][self::KEY_CONN_USER],
+					$hosts[$this->__id][self::KEY_CONN_PASSWORD]);
+				$this->__pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+			}
+			catch (\PDOException $ex)
+			{
+				$this->__error($ex->getMessage());
+			}
+		}
+
+		return $this->__pdo;
+	}
+
+	/**
+	 * Connection exists flag getter
+	 *
+	 * @param int $id
+	 * @return boolean
+	 */
+	private static function __isConnection($id)
+	{
+		return isset(self::$__connections[$id]);
+	}
+
+	/**
+	 * Add debug log message
+	 *
+	 * @param string $message
+	 * @return void
+	 */
+	private function __log($message)
+	{
+		if($this->__conf[self::KEY_CONF_DEBUG])
+		{
+			if($this->__conf[self::KEY_CONF_LOG_HANDLER] !== null)
+			{
+				$this->__conf[self::KEY_CONF_LOG_HANDLER]($message); // custom log handler
+			}
+			else
+			{
+				$this->__log[] = $message;
+			}
+		}
+	}
+
+	/**
+	 * Parse command
+	 *
+	 * @param string $cmd
+	 * @return array (command parts)
+	 */
+	private static function __parseCmd($cmd)
+	{
+		$c = [ // init defaults
+			self::KEY_CMD_COLUMNS => '*',
+			self::KEY_CMD_CONN_ID => 1, // default ID
+			self::KEY_CMD_OPTIONS => '',
+			self::KEY_CMD_SQL => ''
+		];
+
+		// test for connection ID: '[1]*'
+		if($cmd[0] === '[' && preg_match('/^\[([\d]+)\]/', $cmd, $m)) // match '[1]'
+		{
+			$c[self::KEY_CMD_CONN_ID] = (int)$m[1];
+			$cmd = substr($cmd, strpos($cmd, ']') + 1); // rm connection ID '[1]'
+		}
+
+		// test for table: 'table:cmd' or 'table.id' or 'table/option' or 'table [SQL]' or 'table(cols)'
+		if(preg_match('/^([\w]+)(?:\:|\.|\/|\s|\()/', $cmd, $m)) // match 'table(:|.|/| |()'
+		{
+			$c[self::KEY_CMD_TABLE] = $m[1];
+			$cmd = substr($cmd, strlen($m[1])); // rm table
+		}
+
+		// test for columns: '(c1, c2)'
+		if($cmd[0] === '(' && preg_match('/^\(([\w\,\s]+)\)/', $cmd, $m)) // match '(c1, c2)'
+		{
+			$c[self::KEY_CMD_COLUMNS] = trim($m[1]);
+			$cmd = substr($cmd, strlen($m[1]) + 2); // rm columns
+		}
+
+		// test for cmd: ':cmd'
+		if($cmd[0] === ':' && preg_match('/^\:([\w]+)/', $cmd, $m))
+		{
+			$c[self::KEY_CMD] = $m[1];
+			$cmd = substr($cmd, strlen($m[1]) + 1, strlen($cmd)); // rm cmd
+		}
+		// test for select ID: '.1'
+		else if($cmd[0] === '.' && preg_match('/^\.([\d]+)/', $cmd, $m))
+		{
+			$c[self::KEY_CMD_ID] = $m[1];
+			$cmd = substr($cmd, strlen($m[1]) + 1, strlen($cmd)); // rm select ID
+		}
+
+		// test for options: '/opt1/opt2'
+		if($cmd[0] === '/' && preg_match('/^\/([\w\/]+)/', $cmd, $m)) // match '/opt1/opt2'
+		{
+			$c[self::KEY_CMD_OPTIONS] = explode('/', $m[1]);
+			$cmd = substr($cmd, strlen($m[1]) + 1, strlen($cmd)); // rm options
+		}
+
+		$cmd = trim($cmd);
+
+		// test for SQL: 'WHERE x' or 'LIMIT 1'
+		if(!empty($cmd))
+		{
+			$c[self::KEY_CMD_SQL] = $cmd;
+		}
+
+		if(isset($c[self::KEY_CMD_ID]) && isset($c[self::KEY_CMD_TABLE])) // add select ID to SQL
+		{
+			$sql = 'WHERE ' . self::__getConnection($c[self::KEY_CMD_CONN_ID])->getKey($c[self::KEY_CMD_TABLE])
+				. '=' . self::__getConnection($c[self::KEY_CMD_CONN_ID])->__getPdo()->quote($c[self::KEY_CMD_ID]);
+
+			if(strcasecmp(substr($c[self::KEY_CMD_SQL], 0, 5), 'where') === 0) // WHERE exists in SQL
+			{
+				$c[self::KEY_CMD_SQL] = $sql . ' AND ' . substr($c[self::KEY_CMD_SQL], 5); // rm WHERE, add AND
+			}
+			else
+			{
+				$c[self::KEY_CMD_SQL] = $sql . $c[self::KEY_CMD_SQL];
+			}
+		}
+
+		if(!empty($c[self::KEY_CMD_SQL]))
+		{
+			$c[self::KEY_CMD_SQL] = ' ' . $c[self::KEY_CMD_SQL];
+		}
+
+		return $c;
+	}
+
+	/**
+	 * Connection setter
+	 *
+	 * @staticvar int $connection_id
+	 * @param array $connection
+	 * @return int (connection ID)
+	 * @throws \Exception (when connection ID not int, or connection already exists, or invalid connection params)
+	 */
+	private static function __setConnection(array $connection)
+	{
+		static $connection_id = 0;
+
+		if(isset($connection[self::KEY_CONN_HOST], $connection[self::KEY_CONN_DATABASE],
+			$connection[self::KEY_CONN_USER], $connection[self::KEY_CONN_PASSWORD]))
+		{
+			if(isset($connection[self::KEY_CONN_ID])) // manual connection ID
+			{
+				if(!is_int($connection[self::KEY_CONN_ID]) && !ctype_digit($connection[self::KEY_CONN_ID]))
+				{
+					throw new \Exception('Connection ID \'' . $connection[self::KEY_CONN_ID]
+						. '\' must be integer only');
+				}
+
+				$connection[self::KEY_CONN_ID] = (int)$connection[self::KEY_CONN_ID];
+
+				if(self::__isConnection($connection[self::KEY_CONN_ID]))
+				{
+					throw new \Exception('Connection ID \'' . $connection[self::KEY_CONN_ID] . '\' already exists');
+				}
+			}
+			else // auto ID
+			{
+				$connection[self::KEY_CONN_ID] = ++$connection_id;
+
+				while(self::__isConnection($connection[self::KEY_CONN_ID])) // enforce unique ID
+				{
+					$connection[self::KEY_CONN_ID] = ++$connection_id;
+				}
+			}
+
+			self::$__connections[$connection[self::KEY_CONN_ID]] = new self($connection);
+
+			return $connection[self::KEY_CONN_ID];
+		}
+		else
+		{
+			throw new \Exception('Invalid connection parameters (required: host, database, user, password)');
+		}
+	}
+
+	/**
+	 * Query options setter
+	 *
+	 * @staticvar array $map
+	 * @param array $cmd
+	 * @return int
+	 */
+	private static function &__setOptions(&$cmd)
+	{
+		static $map = [
+			'FIRST' => self::OPT_FIRST,
+			'PAGINATION' => self::OPT_PAGINATION,
+			'QUERY' => self::OPT_QUERY
+		];
+
+		$options = 0;
+
+		if(!empty($cmd[self::KEY_CMD_OPTIONS]))
+		{
+			$opts = $cmd[self::KEY_CMD_OPTIONS];
+			$cmd[self::KEY_CMD_OPTIONS] = '';
+
+			foreach($opts as $v)
+			{
+				$v = strtoupper($v);
+
+				if(isset($map[$v])) // option flag
+				{
+					$options |= $map[$v];
+				}
+				else // SQL option
+				{
+					$cmd[self::KEY_CMD_OPTIONS] .= ' ' . $v;
+				}
+			}
+		}
+
+		return $options;
+	}
+
+	/**
+	 * Configuration settings getter
+	 *
+	 * @param mixed $key (string for key, null for get all)
+	 * @return mixed
+	 */
+	public function conf($key)
+	{
+		if(is_null($key)) // get all
+		{
+			return $this->__conf;
+		}
+
+		if(isset($this->__conf[$key]) || array_key_exists($key, $this->__conf))
+		{
+			return $this->__conf[$key];
+		}
+	}
+
+	/**
+	 * Execute command
+	 *
+	 * @staticvar array $pagination
+	 * @param array $args
+	 * @return mixed
+	 * @throws \Exception
+	 */
+	public static function exec(array $args)
+	{
+		$cmd = array_shift($args);
+
+		if(is_string($cmd)) // parse cmd
+		{
+			static $pagination = [self::KEY_PAGE_RPP => 10, self::KEY_PAGE_PAGE => 1];
+			$cmd = self::__parseCmd($cmd); // parse cmd
+			$options = &self::__setOptions($cmd);
+			$params = []; // query params
+
+			if(!isset($cmd[self::KEY_CMD])) // SELECT cmd
+			{
+				$q = 'SELECT' . $cmd[self::KEY_CMD_OPTIONS] . ' ' . $cmd[self::KEY_CMD_COLUMNS] . ' FROM '
+					. $cmd[self::KEY_CMD_TABLE] . $cmd[self::KEY_CMD_SQL];
+
+				if($options & self::OPT_PAGINATION) // add pagination
+				{
+					// match 'LIMIT x, y (OFFSET z)?', only allow if no LIMIT
+					if(!preg_match('/LIMIT[\s\d,]+(OFFSET[\s\d]+)?$/i', $q))
+					{
+						$p = [self::KEY_PAGE_RPP => $pagination[self::KEY_PAGE_RPP], self::KEY_PAGE_PAGE =>
+							$pagination[self::KEY_PAGE_PAGE], self::KEY_PAGE_NEXT => 0, self::KEY_PAGE_PREV => 0,
+							self::KEY_PAGE_OFFSET => 0];
+						$p[self::KEY_PAGE_OFFSET] = ($p[self::KEY_PAGE_PAGE] - 1) * $p[self::KEY_PAGE_RPP];
+						$q .= ' LIMIT ' . $p[self::KEY_PAGE_OFFSET] . ', ' . ($p[self::KEY_PAGE_RPP] + 1);
+					}
+					else // LIMIT already exists
+					{
+						throw new \Exception('Failed to apply pagination to query,'
+							. ' LIMIT clause already exists in query');
+					}
+				}
+
+				if(isset($args[0]) && is_array($args[0])) // query params
+				{
+					$params = &$args[0];
+				}
+
+				if($options & self::OPT_QUERY) // query as string
+				{
+					return $q;
+				}
+				else if(isset($p)) // exec query with pagination
+				{
+					$r = self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($q, $params);
+
+					if(count($r) > $p[self::KEY_PAGE_RPP])
+					{
+						array_pop($r); // rm last row (more rows)
+						$p[self::KEY_PAGE_NEXT] = $p[self::KEY_PAGE_PAGE] + 1;
+					}
+
+					if($p[self::KEY_PAGE_PAGE] > 1)
+					{
+						$p[self::KEY_PAGE_PREV] = $p[self::KEY_PAGE_PAGE] - 1;
+					}
+
+					return ['pagination' =>
+						self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->conf(self::KEY_CONF_OBJECTS)
+						? (object)$p : $p, 'rows' => &$r];
+				}
+				else // exec query
+				{
+					// select ID or /first option, return first row only
+					if(isset($cmd[self::KEY_CMD_ID]) || $options & self::OPT_FIRST)
+					{
+						$r = self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($q, $params);
+
+						if(isset($r[0]))
+						{
+							return $r[0];
+						}
+
+						return null; // no record
+					}
+					else
+					{
+						return self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($q, $params);
+					}
+				}
+			}
+			else // process :cmd
+			{
+				switch($cmd[self::KEY_CMD])
+				{
+					case 'add': // insert|replace
+					case 'insert':
+					case 'replace':
+						if(is_object($args[0])) // object add
+						{
+							$obj_arr = [];
+
+							foreach(get_object_vars($args[0]) as $k => $v)
+							{
+								$obj_arr[$k] = $v;
+							}
+
+							$args[0] = &$obj_arr;
+						}
+
+						$values = [];
+						foreach($args[0] as $k => $v)
+						{
+							if(is_array($v)) // plain SQL
+							{
+								if(isset($v[0]) && strlen($v[0]) > 0)
+								{
+									$values[] = $v[0];
+								}
+							}
+							else // named param
+							{
+								$params[$k] = $v;
+								$values[] = ':' . $k;
+							}
+						}
+
+						$q = ( $cmd[self::KEY_CMD] === 'replace' ? 'REPLACE' : 'INSERT' ) . $cmd[self::KEY_CMD_OPTIONS]
+							. ' INTO ' . $cmd[self::KEY_CMD_TABLE] . '(' . implode(', ', array_keys($args[0]))
+							. ') VALUES(' . implode(', ', $values) . ')';
+
+						if($options & self::OPT_QUERY)
+						{
+							return $q;
+						}
+						else
+						{
+							return self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($q, $params);
+						}
+						break;
+
+					case 'call': // call SP/SF
+						$params_str = '';
+
+						for($i = 0; $i <= count($args) - 1; $i++)
+						{
+							$sep = empty($params_str) ? '' : ', ';
+							if(!is_array($args[$i])) // param
+							{
+								$params_str .= $sep . '?';
+								$params[] = $args[$i];
+							}
+							else if(isset($args[$i][0]) && strlen($args[$i][0]) > 0) // plain SQL
+							{
+								$params_str .= $sep . $args[$i][0];
+							}
+						}
+
+						$q = 'CALL' . $cmd[self::KEY_CMD_SQL] . '(' . $params_str . ')';
+
+						if($options & self::OPT_QUERY)
+						{
+							return $q;
+						}
+						else
+						{
+							return self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($q, $params);
+						}
+						break;
+
+					case 'columns': // show table columns
+						$q = 'SHOW COLUMNS FROM ' . $cmd[self::KEY_CMD_TABLE];
+
+						if($options & self::OPT_QUERY)
+						{
+							return $q;
+						}
+
+						$r = self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($q);
+
+						$c = [];
+						if(isset($r) && is_array($r))
+						{
+							foreach($r as $v)
+							{
+								$v = array_values((array)$v);
+								$c[] = $v[0];
+							}
+						}
+						return $c;
+						break;
+
+					case 'commit': // commit transaction
+						return self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->__getPdo()->commit();
+						break;
+
+					case 'count': // count records
+						$q = 'SELECT COUNT(1) AS count FROM ' . $cmd[self::KEY_CMD_TABLE] . $cmd[self::KEY_CMD_SQL];
+
+						if($options & self::OPT_QUERY)
+						{
+							return $q;
+						}
+						else
+						{
+							$r = self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($q,
+								isset($args[0]) ? $args[0] : null);
+							return isset($r[0]->count) ? (int)$r[0]->count : 0;
+						}
+						break;
+
+					case 'debug': // debug info
+						$d = [];
+
+						foreach(self::$__connections as $k => $v)
+						{
+							$d[$k] = [
+								'conf' => self::__getConnection($k)->conf(null),
+								'keys' => self::__getConnection($k)->getKey(null),
+								'log' => self::__getConnection($k)->getLog()
+							];
+						}
+
+						return $d;
+						break;
+
+					case 'del': // delete
+					case 'delete':
+						$q = 'DELETE' . $cmd[self::KEY_CMD_OPTIONS] . ' FROM ' . $cmd[self::KEY_CMD_TABLE]
+							. $cmd[self::KEY_CMD_SQL];
+
+						if($options & self::OPT_QUERY)
+						{
+							return $q;
+						}
+						else
+						{
+							return self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($q,
+								isset($args[0]) ? $args[0] : null);
+						}
+						break;
+
+					case 'error': // error check
+						return self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->isError();
+						break;
+
+					case 'error_last': // get last error
+						return self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->getError();
+						break;
+
+					case 'id': // get last insert ID
+						return self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->__getPdo()->lastInsertId();
+						break;
+
+					case 'key': // table primary key column name getter/setter
+						if(isset($args[0]) && is_array($args[0])) // array setter
+						{
+							foreach($args[0] as $k => $v)
+							{
+								self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->setKey($k, $v);
+							}
+
+							return self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->getKey(null); // return all
+						}
+
+						$cmd[self::KEY_CMD_SQL] = trim($cmd[self::KEY_CMD_SQL]);
+						if(strlen($cmd[self::KEY_CMD_SQL]) > 0) // setter
+						{
+							self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->setKey($cmd[self::KEY_CMD_TABLE],
+								$cmd[self::KEY_CMD_SQL]);
+						}
+
+						return self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->getKey($cmd[self::KEY_CMD_TABLE]);
+						break;
+
+					case 'log': // log getter
+						return self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->getLog();
+						break;
+
+					case 'mod': // update
+					case 'update':
+						$values = [];
+						if(is_array($args[0]) || is_object($args[0]))
+						{
+							foreach($args[0] as $k => $v)
+							{
+								if(is_array($v)) // plain SQL
+								{
+									if(isset($v[0]) && strlen($v[0]) > 0)
+									{
+										$values[] = $k . ' = ' . $v[0];
+									}
+								}
+								else // named param
+								{
+									$params[$k] = $v;
+									$values[] = $k . ' = :' . $k;
+								}
+							}
+						}
+						else
+						{
+							throw new \Exception('Update failed: using scalar value for setting columns and values'
+								. ' (use array or object)');
+						}
+
+						if(isset($args[1]) && is_array($args[1])) // statement params
+						{
+							$params = array_merge($params, $args[1]);
+						}
+
+						$q = 'UPDATE' . $cmd[self::KEY_CMD_OPTIONS] . ' ' . $cmd[self::KEY_CMD_TABLE] . ' SET '
+							. implode(', ', $values) . $cmd[self::KEY_CMD_SQL];
+
+						if($options & self::OPT_QUERY)
+						{
+							return $q;
+						}
+						else
+						{
+							return self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($q, $params);
+						}
+						break;
+
+					case 'pagination': // pagination params getter/setter
+						if(isset($args[0]) && is_array($args[0])) // setter
+						{
+							foreach($args[0] as $k => $v)
+							{
+								if(isset($pagination[$k]))
+								{
+									$v = (int)$v;
+									if($v > 0)
+									{
+										$pagination[$k] = $v;
+									}
+								}
+							}
+						}
+
+						return $pagination;
+						break;
+
+					case 'query': // manual query
+						if($options & self::OPT_QUERY)
+						{
+							return $cmd[self::KEY_CMD_SQL];
+						}
+
+						return self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($cmd[self::KEY_CMD_SQL],
+							isset($args[0]) ? $args[0] : null);
+						break;
+
+					case 'rollback': // rollback transaction
+						return self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->__getPdo()->rollBack();
+						break;
+
+					case 'tables': // show database tables
+						$q = 'SHOW TABLES';
+
+						if($options & self::OPT_QUERY)
+						{
+							return $q;
+						}
+
+						$r = self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($q);
+						$t = [];
+						if(isset($r) && is_array($r))
+						{
+							foreach($r as $v)
+							{
+								$v = array_values((array)$v);
+								$t[] = $v[0];
+							}
+						}
+						return $t;
+						break;
+
+					case 'transaction': // begin transaction
+						return self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->__getPdo()->beginTransaction();
+						break;
+
+					default: // unknown command
+						throw new \Exception('Invalid command \'' . $cmd[self::KEY_CMD] . '\'');
+						break;
+				}
+			}
+		}
+		else if(is_array($cmd)) // connection/config
+		{
+			return self::__setConnection($cmd);
+		}
+	}
+
+	/**
+	 * Last error message getter
+	 *
+	 * @return string
+	 */
+	public function getError()
+	{
+		return $this->__error;
+	}
+
+	/**
+	 * Table primary key column name(s) getter
+	 *
+	 * @param mixed $table (string for table, null for get all)
+	 * @return mixed (string for key, array for get all)
+	 */
+	public function getKey($table)
+	{
+		if(is_null($table)) // get all
+		{
+			return $this->__key_map;
+		}
+
+		if(isset($this->__key_map[$table]))
+		{
+			return $this->__key_map[$table];
+		}
+
+		return self::DEFAULT_PRIMARY_KEY;
+	}
+
+	/**
+	 * Debug log getter
+	 *
+	 * @return array
+	 */
+	public function getLog()
+	{
+		return $this->__log;
+	}
+
+	/**
+	 * Error has occurred flag getter
+	 *
+	 * @return boolean
+	 */
+	public function isError()
+	{
+		return $this->__error !== null;
+	}
+
+	/**
+	 * Execute query
+	 *
+	 * @param string $query
+	 * @param array $params (prepared statement params)
+	 * @return mixed (array|boolean|int)
+	 */
+	public function query($query, $params = null)
+	{
+		$this->__log('Query: ' . $query);
+		if(is_array($params) && !empty($params))
+		{
+			$q_params = [];
+			foreach($params as $k => $v)
+			{
+				if(is_array($v))
+				{
+					$this->__error('Invalid query parameter(s) type: array (only use scalar values)');
+					return false;
+				}
+
+				$q_params[] = $k . ' => ' . $v;
+			}
+
+			$this->__log('(Query params: ' . implode(', ', $q_params) . ')');
+		}
+
+		try
+		{
+			$sh = $this->__getPdo()->prepare($query);
+			if($sh->execute( is_array($params) ? $params : null ))
+			{
+				if(preg_match('/^\s*(select|show|describe|optimize|pragma|repair)/i', $query)) // fetch
+				{
+					return $sh->fetchAll( $this->conf(self::KEY_CONF_OBJECTS) ? \PDO::FETCH_CLASS : \PDO::FETCH_ASSOC );
+				}
+				else if(preg_match('/^\s*(delete|insert|update)/i', $query)) // affected
+				{
+					return $sh->rowCount();
+				}
+				else // other
+				{
+					return true;
+				}
+			}
+			else
+			{
+				$this->__error($sh->errorInfo());
+			}
+		}
+		catch(\PDOException $ex)
+		{
+			$this->__error($ex->getMessage());
+		}
+
+		return false;
+	}
+
+	/**
+	 * Table primary key column name setter
+	 *
+	 * @param string $table
+	 * @param string $key
+	 * @return void
+	 */
+	public function setKey($table, $key)
+	{
+		if(!empty($key))
+		{
+			$this->__key_map[$table] = $key;
+		}
+	}
+}
