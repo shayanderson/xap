@@ -455,3 +455,4 @@ $r = xap('users(id, fullname)/distinct/pagination WHERE LENGTH(fullname) > ?', [
 // $r['pagination'] contains pagination values: rpp, page, next, prev, offset
 // $r['rows'] contains selected rows
 ```
+> Pagination only works on select commands like `users(id, fullname)/pagination` and will *not* work on other commands like `:query/pagination SELECT id, fullname FROM users`
