@@ -126,12 +126,13 @@ $affected_rows = xap('users:add', ['fullname' => 'Name Here', 'is_active' => 1,
 // can also use action ':insert'
 // xap('users:insert', ...);
 ```
-> The `replace` command can also be used, for example:
+The `replace` command can also be used, for example:
 ```php
 // REPLACE INTO users (id, fullname, is_active, created) VALUES(5, 'Name Here', '1', NOW())
 $affected_rows = xap('users:replace', ['id' => 5 'fullname' => 'Name Here',
 	'is_active' => 1, 'created' => ['NOW()']]);
 ```
+> When using the `mod`, `insert` or `replace` command all params must be *named* params like `:my_param` and *not* question mark parameters
 
 #### Insert with Insert ID
 Insert query and get insert ID:
