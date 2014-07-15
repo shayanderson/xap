@@ -1,5 +1,10 @@
 # Xap
 #### MySQL Rapid Development Engine for PHP 5.5.0+
+Requirements:
+
+1. PHP 5.5.0+
+2. PHP [PDO database extension](http://www.php.net/manual/en/book.pdo.php)
+3. Database table names cannot include characters '.', '/', ':' or ' ' (whitespace) and cannot start with '['
 
 Here is a list of Xap commands:
 
@@ -8,6 +13,7 @@ Here is a list of Xap commands:
 - [`columns`](https://github.com/shayanderson/xap#show-table-columns) - show table columns
 - [`commit`](https://github.com/shayanderson/xap#transactions) - commit transaction
 - [`count`](https://github.com/shayanderson/xap#count-query) - count table records
+- [`debug`](https://github.com/shayanderson/xap#debugging) - get debug info for connections
 - [`del`](https://github.com/shayanderson/xap#delete) - delete record(s) (can also use `delete`)
 - [`error`](https://github.com/shayanderson/xap#error-checking) - check if error has occurred
 - [`error_last`](https://github.com/shayanderson/xap#get-last-error) - get last error, when error has occurred
@@ -15,6 +21,7 @@ Here is a list of Xap commands:
 - [`key`](https://github.com/shayanderson/xap#custom-table-primary-key-column-name) - get/set table primary key column name (default 'id')
 - [`log`](https://github.com/shayanderson/xap#debug-log) - get debug log (debugging must be turned on)
 - [`mod`](https://github.com/shayanderson/xap#update) - update record(s) (can also use `update`)
+- [`pagination`](https://github.com/shayanderson/xap#pagination) - get/set pagination params
 - [`query`](https://github.com/shayanderson/xap#execute-query) - execute manual query
 - [`replace`](https://github.com/shayanderson/xap#insert) - replace record
 - [`rollback`](https://github.com/shayanderson/xap#transactions) - rollback transaction
@@ -76,13 +83,13 @@ $r = xap('users LIMIT 1'); // SELECT * FROM users LIMIT 1
 Select query with named parameters:
 ```php
 // SELECT fullname, email FROM users WHERE is_active = '1' AND fullname = 'Shay Anderson'
-$r = xap('users(fullname, email) WHERE is_active = :active AND fullname = :name LIMIT 2', 
+$r = xap('users(fullname, email) WHERE is_active = :active AND fullname = :name LIMIT 2',
 	['active' => 1, 'name' => 'Shay Anderson']);
 ```
 Select query with question mark parameters:
 ```php
 // SELECT fullname, email FROM users WHERE is_active = 1 AND fullname = 'Shay Anderson' LIMIT 2
-$r = xap('users(fullname, email) WHERE is_active = ? AND fullname = ? LIMIT 2', 
+$r = xap('users(fullname, email) WHERE is_active = ? AND fullname = ? LIMIT 2',
 	[1, 'Shay Anderson']);
 ```
 
@@ -313,7 +320,7 @@ if(xap(':error'))
 #### Debugging
 To display all registered connections, mapped keys, debug log and errors use:
 ```php
-print_r( xap(null) ); // returns array with debug info
+print_r( xap(':debug') ); // returns array with debug info
 ```
 
 ## Advanced
