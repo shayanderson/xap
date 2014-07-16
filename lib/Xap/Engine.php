@@ -302,13 +302,6 @@ class Engine
 			$cmd = substr($cmd, strlen($m[1])); // rm table
 		}
 
-		// test for select ID: '.1'
-		if($cmd[0] === '.' && preg_match('/^\.([\d]+)/', $cmd, $m))
-		{
-			$c[self::KEY_CMD_ID] = $m[1];
-			$cmd = substr($cmd, strlen($m[1]) + 1, strlen($cmd)); // rm select ID
-		}
-
 		// test for columns: '(c1, c2)'
 		if($cmd[0] === '(' && preg_match('/^\(([\w\,\s]+)\)/', $cmd, $m)) // match '(c1, c2)'
 		{
@@ -321,6 +314,12 @@ class Engine
 		{
 			$c[self::KEY_CMD] = $m[1];
 			$cmd = substr($cmd, strlen($m[1]) + 1, strlen($cmd)); // rm cmd
+		}
+		// test for select ID: '.1'
+		else if($cmd[0] === '.' && preg_match('/^\.([\d]+)/', $cmd, $m))
+		{
+			$c[self::KEY_CMD_ID] = $m[1];
+			$cmd = substr($cmd, strlen($m[1]) + 1, strlen($cmd)); // rm select ID
 		}
 
 		// test for options: '/opt1/opt2'
