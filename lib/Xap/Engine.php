@@ -762,6 +762,29 @@ class Engine
 						return self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->getError();
 						break;
 
+					case 'exists': // check if record(s) exists
+						$q = 'SELECT EXISTS(SELECT 1 FROM ' . $cmd[self::KEY_CMD_TABLE] . $cmd[self::KEY_CMD_SQL]
+							. ') AS is_set';
+
+						if($options & self::OPT_QUERY)
+						{
+							return $q;
+						}
+						else
+						{
+							$r = self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($q,
+								isset($args[0]) ? $args[0] : null);
+
+							if(isset($r[0]))
+							{
+								$r = (array)$r[0];
+								return (int)$r['is_set'] > 0;
+							}
+
+							return false;
+						}
+						break;
+
 					case 'id': // get last insert ID
 						return self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->__getPdo()->lastInsertId();
 						break;

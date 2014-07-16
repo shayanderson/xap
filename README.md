@@ -17,6 +17,7 @@ Here is a list of Xap commands:
 - [`del`](https://github.com/shayanderson/xap#delete) - delete record(s) (can also use `delete`)
 - [`error`](https://github.com/shayanderson/xap#error-checking) - check if error has occurred
 - [`error_last`](https://github.com/shayanderson/xap#get-last-error) - get last error, when error has occurred
+- [`exists`](https://github.com/shayanderson/xap#) - check if record exists
 - [`id`](https://github.com/shayanderson/xap#insert-with-insert-id) - get last insert ID
 - [`key`](https://github.com/shayanderson/xap#custom-table-primary-key-column-name) - get/set table primary key column name (default 'id')
 - [`log`](https://github.com/shayanderson/xap#debug-log) - get debug log (debugging must be turned on)
@@ -238,6 +239,13 @@ $count = xap('users:count WHERE is_active = 1');
 
 // SELECT COUNT(1) FROM users WHERE user_id > '2' AND is_active = '1'
 $count = xap('users:count WHERE user_id > ? AND is_active = ?', [2, 1]);
+```
+
+#### Record(s) Exist
+Check if record(s) exists:
+```php
+$is_record = xap('users:exists WHERE user_id = ? AND is_active = 1', [2])
+if($is_record) // do something
 ```
 
 #### Call Stored Procedure/Function (Routines)

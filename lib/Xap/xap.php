@@ -22,6 +22,7 @@
  *		del			(also delete, delete record(s))
  *		error		(check if error has occurred)
  *		error_last	(get last error, when error has occurred)
+ *		exists		(check if record exists)
  *		id			(get last insert ID)
  *		key			(get/set table primary key column name, default 'id')
  *		log			(get debug log, debugging must be turned on)
