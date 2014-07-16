@@ -549,7 +549,7 @@ else
 ##### Delete Model Record
 Deleting a model record is simple:
 ```php
-$user = xap('users)/model'); // set model object
+$user = xap('users/model'); // set model object
 // set model record primary key value (required for delete)
 $user->id = 14; // delete record with ID = 14
 // delete model record
@@ -583,7 +583,7 @@ else
 ##### Adding Query SQL
 Query SQL can be added when setting the model object, for example:
 ```php
-$user = xap('users)/model WHERE is_active = 1'); // set model object with where clause
+$user = xap('users/model WHERE is_active = 1'); // set model object with where clause
 $user->id = 14; // set primary key column value (required)
 // check if model record exists 'WHERE id = 14 AND is_active = 1'
 if($user->exists())
