@@ -334,7 +334,7 @@ print_r( xap(':debug') ); // returns array with debug info
 ```
 
 ## Advanced
-#### Custom Table Primary Key Column Name
+### Custom Table Primary Key Column Name
 By default the primary key column named used when selecting with key is 'id'.
  This can be changed using the 'key' or 'keys' command:
 ```php
@@ -351,7 +351,7 @@ xap(':key', [
 ]);
 ```
 
-#### Custom Log Handler
+### Custom Log Handler
 A custom log handler can be used when setting a database connection, for example:
 ```php
 // register database connection
@@ -365,7 +365,7 @@ xap([
 ```
 Now all Xap log messages will be sent to the custom callable log handler.
 
-#### Custom Error Handler
+### Custom Error Handler
 A custom error handler can be used when setting a database connection, for example:
 ```php
 // register database connection
@@ -379,7 +379,7 @@ xap([
 ```
 Now all Xap error messages will be sent to the custom callable error handler.
 
-#### Query Options
+### Query Options
 Query options are used like: `table:command/[option]` and can be used with `SELECT` commands and other commands.
 
 Example of option use:
@@ -413,7 +413,7 @@ if(isset($user[0])) echo $user[0]->fullname;
 ```
 > Other options not mentioned here are: [`/pagination`](https://github.com/shayanderson/xap#pagination) and [`/model`](https://github.com/shayanderson/xap#data-modeling)
 
-#### Multiple Database Connections
+### Multiple Database Connections
 Using multiple database connections is easy, register database connections in bootstrap:
 ```php
 // connection 1 (default connection)
@@ -443,7 +443,7 @@ $r = xap('users.2'); // SELECT * FROM users WHERE id = '2'
 $r2 = xap('[2]users.2'); // SELECT * FROM users WHERE id = '2'
 ```
 
-#### Pagination
+### Pagination
 Pagination is easy to use for large select queries, here is an example:
 ```php
 // set current page number, for this example use GET parameter 'pg'
@@ -460,7 +460,7 @@ $r = xap('users(id, fullname)/distinct/pagination WHERE LENGTH(fullname) > ?', [
 ```
 > Pagination only works on select commands like `users(id, fullname)/pagination` and will *not* work on other commands like `:query/pagination SELECT id, fullname FROM users`
 
-#### Data Modeling
+### Data Modeling
 Data Modeling (or ORM) can be used in Xap. First, ensure the `\Xap\Model` class is included in the `xap.bootstrap.php` file:
 ```php
 require_once './lib/Xap/Model.php';
