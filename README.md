@@ -564,3 +564,24 @@ else
 	// warn user record does not exist
 }
 ```
+
+##### Adding Query SQL
+Query SQL can be added when setting the model object, for example:
+```php
+$user = xap('users)/model WHERE is_active = 1'); // set model object with where clause
+$user->id = 14; // does record with ID = 14 exist
+// check if model record exists 'WHERE id = 14 AND is_active = 1'
+if($user->exists())
+{
+	// do something
+}
+```
+Also query params (*named* query params) can be used:
+```php
+$user = xap('users)/model WHERE is_active = :active', ['active' => 1]);
+```
+
+> Query SQL rules:
+- The `LIMIT` clause *cannot* be used with the model object
+- Do not include the model primary key column name as a named parameter (in the query paramters) because it is automatically set by the model object
+- Select with key like `users.14/model` will *not* work with the model object
