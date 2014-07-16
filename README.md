@@ -474,6 +474,8 @@ if($user->load()) // load record data
 	echo $user->fullname;
 }
 ```
+> If the table primary key column name is not `id` use [custom table primary key column name](https://github.com/shayanderson/xap#custom-table-primary-key-column-name)
+
 This can also be done using:
 ```php
 $user = xap('users/model'); // \Xap\Model object
@@ -529,3 +531,19 @@ else
 }
 ```
 
+##### Delete Model Record
+Deleting a model record is simple:
+```php
+$user = xap('users)/model'); // set model object
+// set model record primary key value (required for delete)
+$user->id = 14; // delete record with ID = 14
+// delete model record
+if($user->delete())
+{
+	// do something
+}
+else
+{
+	// warn failed to delete user record
+}
+```
