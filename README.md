@@ -593,7 +593,7 @@ if($user->exists())
 ```
 Also query params (*named* query params) can be used:
 ```php
-$user = xap('users)/model WHERE is_active = :active', ['active' => 1]);
+$user = xap('users/model WHERE is_active = :active', ['active' => 1]);
 ```
 
 > Query SQL rules:
