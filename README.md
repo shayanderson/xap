@@ -379,8 +379,7 @@ xap([
 Now all Xap error messages will be sent to the custom callable error handler.
 
 #### Query Options
-Query options are used like: `table:command/[option]` and can be used with `SELECT` commands and these commands:
-`add/insert`, `call`, `del/delete`, `mod/update`
+Query options are used like: `table:command/[option]` and can be used with `SELECT` commands and other commands.
 
 Example of option use:
 ```php
