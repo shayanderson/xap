@@ -465,7 +465,7 @@ Data Modeling (or ORM) can be used in Xap. First, ensure the `\Xap\Model` class 
 ```php
 require_once './lib/Xap/Model.php';
 ```
-Next, set the data model object:
+Next, set the data model object using the `/model` option and load the model record data:
 ```php
 $user = xap('users/model'); // \Xap\Model object
 $user->id = 14; // set primary key column value
@@ -474,3 +474,34 @@ if($user->load()) // load record data
 	echo $user->fullname;
 }
 ```
+> This can also be done using:
+```php
+$user = xap('users/model'); // \Xap\Model object
+if($user->load(14)) // load record data with primary key column value
+{
+	echo $user->fullname;
+}
+```
+
+##### Add Model Record
+Adding (inserting) a model record is simple:
+```php
+// set model object and define model columns (required for insert)
+$user = xap('users(fullname,is_active,created)/model');
+// set model column values
+$user->fullname = 'Shay Anderson';
+$user->is_active = 1;
+$user->created = ['NOW()']; // plain SQL as array value
+// add model record
+if($user->add())
+{
+	// now the insert ID is ready:
+	$insert_id = $user->id;
+}
+else
+{
+	// warn failed to add user
+}
+```
+
+

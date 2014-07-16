@@ -157,10 +157,14 @@ class Model
 	 *
 	 * @param boolean $ignore_errors (ignore insert errors)
 	 * @return boolean (true on insert)
+	 * @throws \Exception (when no model columns defined)
 	 */
 	public function add($ignore_errors = false)
 	{
-		$this->__validateKeyValue();
+		if(count($this->getData(false)) < 1)
+		{
+			throw new \Exception('Failed to add model record, no columns defined');
+		}
 
 		$affected = Engine::exec([$this->__getConnectionStr() . $this->__table . ':add'
 			. ( $ignore_errors ? '/ignore' : '' ) . $this->__query_sql, $this->getData(false),
