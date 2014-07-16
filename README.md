@@ -244,7 +244,8 @@ $count = xap('users:count WHERE user_id > ? AND is_active = ?', [2, 1]);
 #### Record(s) Exist
 Check if record(s) exists:
 ```php
-$records = xap('users:exists'); // check if records exists
+$has_records = xap('users:exists'); // check if records exists
+if($has_records) // do something
 
 // use query params example:
 $is_record = xap('users:exists WHERE user_id = ? AND is_active = 1', [2])
