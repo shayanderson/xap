@@ -716,10 +716,10 @@ class Engine
 							if(isset($r[0]))
 							{
 								$r = (array)$r[0];
-								return (int)$r['count'] > 0;
+								return (int)$r['count'];
 							}
 
-							return false;
+							return 0;
 						}
 						break;
 
