@@ -118,6 +118,7 @@ When selecting with key use integer values only, for example:
 $r = xap('users.' . (int)$id);
 ```
 > The default primary key column name is `id`, for using different primary key column name see [custom table primary key column name](https://github.com/shayanderson/xap#custom-table-primary-key-column-name)
+
 <blockquote>Select with key command <i>cannot</i> use commands like <code>:command</code></blockquote>
 
 #### Select Distinct
