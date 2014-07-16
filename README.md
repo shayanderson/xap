@@ -569,7 +569,7 @@ else
 Query SQL can be added when setting the model object, for example:
 ```php
 $user = xap('users)/model WHERE is_active = 1'); // set model object with where clause
-$user->id = 14; // does record with ID = 14 exist
+$user->id = 14; // set primary key column value (required)
 // check if model record exists 'WHERE id = 14 AND is_active = 1'
 if($user->exists())
 {
