@@ -36,6 +36,7 @@ Xap also supports:
 - [Query options](https://github.com/shayanderson/xap#query-options)
 - [Multiple database connections](https://github.com/shayanderson/xap#multiple-database-connections)
 - [Pagination](https://github.com/shayanderson/xap#pagination)
+- [Data Modeling (ORM)](https://github.com/shayanderson/xap#data-modeling)
 
 ## Quick Start
 Edit the `xap.bootstrap.php` file and add your database connection params:
@@ -410,6 +411,7 @@ This can simplify using the first record only instead of having to use:
 ```php
 if(isset($user[0])) echo $user[0]->fullname;
 ```
+> Other options not mentioned here are: `[/pagination](https://github.com/shayanderson/xap#pagination)` and `[/model](https://github.com/shayanderson/xap#data-modeling)`
 
 #### Multiple Database Connections
 Using multiple database connections is easy, register database connections in bootstrap:
@@ -457,3 +459,9 @@ $r = xap('users(id, fullname)/distinct/pagination WHERE LENGTH(fullname) > ?', [
 // $r['rows'] contains selected rows
 ```
 > Pagination only works on select commands like `users(id, fullname)/pagination` and will *not* work on other commands like `:query/pagination SELECT id, fullname FROM users`
+
+#### Data Modeling
+Data Modeling (or ORM) can be used in Xap. First, ensure the \Xap\Model class is included in the `xap.bootstrap.php` file:
+```php
+require_once './lib/Xap/Model.php';
+```
