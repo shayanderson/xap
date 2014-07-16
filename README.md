@@ -516,7 +516,7 @@ $user = xap('users(fullname,is_active)/model');
 // set model record primary key value (required for update)
 $user->id = 14; // update record with ID = 14
 // set new model column values
-$user->fullname = 'Shay Anderson';
+$user->fullname = 'New Name';
 $user->is_active = 1;
 // update model record
 if($user->save())
