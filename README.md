@@ -465,3 +465,12 @@ Data Modeling (or ORM) can be used in Xap. First, ensure the `\Xap\Model` class 
 ```php
 require_once './lib/Xap/Model.php';
 ```
+Next, set the data model object:
+```php
+$user = xap('users/model'); // \Xap\Model object
+$user->id = 14; // set primary key column value
+if($user->load()) // load record data
+{
+	echo $user->fullname;
+}
+```
