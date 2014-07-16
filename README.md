@@ -566,7 +566,7 @@ else
 ##### Model Record Exists
 Checking if a model record exists is simple:
 ```php
-$user = xap('users)/model'); // set model object
+$user = xap('users/model'); // set model object
 // set model record primary key value (required for exists)
 $user->id = 14; // does record with ID = 14 exist
 // check if model record exists
