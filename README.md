@@ -488,6 +488,7 @@ if($user->load(14)) // load record data with primary key column value
 ```php
 $user = xap('users(fullname)/model'); // only load 'fullname' column
 ```
+**Note**: if column name are *not* defined they are automatically set by the model object, meaning that an update following a load (select) will update all the automatically loaded columns instead of defined columns (which is recommended)
 
 ##### Add Model Record
 Adding (inserting) a model record is simple:
@@ -583,5 +584,16 @@ $user = xap('users)/model WHERE is_active = :active', ['active' => 1]);
 
 > Query SQL rules:
 - The `LIMIT` clause *cannot* be used with the model object
-- Do not include the model primary key column name as a named parameter (in the query paramters) because it is automatically set by the model object
+- Do *not* include the model primary key column name as a named parameter (in the query paramters) because it is automatically set by the model object
 - Select with key like `users.14/model` will *not* work with the model object
+
+##### Other Model Object Methods
+Other useful `\Xap\Model` methods are:
+
+- `getColumns()` - get model column names in array
+- `getData()` - get the loaded model record data
+- `getKey()` - get the model primary key column name
+- `getTable()` - get the table name
+- `isColumn()` - check if a column exists
+- `isLoaded()` - check if the model record is loaded
+- `setData()` - set the model record data
