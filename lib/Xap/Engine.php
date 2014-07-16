@@ -3,7 +3,7 @@
  * Xap - MySQL Rapid Development Engine for PHP 5.5.0+
  *
  * @package Xap
- * @version 0.0.1
+ * @version 0.0.2
  * @copyright 2014 Shay Anderson <http://www.shayanderson.com>
  * @license MIT License <http://www.opensource.org/licenses/mit-license.php>
  * @link <https://github.com/shayanderson/xap>
@@ -69,8 +69,9 @@ class Engine
 	 */
 	const
 		OPT_FIRST = 0x1,
-		OPT_PAGINATION = 0x2,
-		OPT_QUERY = 0x4;
+		OPT_MODEL = 0x2,
+		OPT_PAGINATION = 0x4,
+		OPT_QUERY = 0x8;
 
 	/**
 	 * Connections
@@ -283,7 +284,8 @@ class Engine
 			self::KEY_CMD_COLUMNS => '*',
 			self::KEY_CMD_CONN_ID => 1, // default ID
 			self::KEY_CMD_OPTIONS => '',
-			self::KEY_CMD_SQL => ''
+			self::KEY_CMD_SQL => '',
+			self::KEY_CMD_TABLE => ''
 		];
 
 		// test for connection ID: '[1]*'
@@ -300,6 +302,13 @@ class Engine
 			$cmd = substr($cmd, strlen($m[1])); // rm table
 		}
 
+		// test for select ID: '.1'
+		if($cmd[0] === '.' && preg_match('/^\.([\d]+)/', $cmd, $m))
+		{
+			$c[self::KEY_CMD_ID] = $m[1];
+			$cmd = substr($cmd, strlen($m[1]) + 1, strlen($cmd)); // rm select ID
+		}
+
 		// test for columns: '(c1, c2)'
 		if($cmd[0] === '(' && preg_match('/^\(([\w\,\s]+)\)/', $cmd, $m)) // match '(c1, c2)'
 		{
@@ -312,12 +321,6 @@ class Engine
 		{
 			$c[self::KEY_CMD] = $m[1];
 			$cmd = substr($cmd, strlen($m[1]) + 1, strlen($cmd)); // rm cmd
-		}
-		// test for select ID: '.1'
-		else if($cmd[0] === '.' && preg_match('/^\.([\d]+)/', $cmd, $m))
-		{
-			$c[self::KEY_CMD_ID] = $m[1];
-			$cmd = substr($cmd, strlen($m[1]) + 1, strlen($cmd)); // rm select ID
 		}
 
 		// test for options: '/opt1/opt2'
@@ -342,7 +345,7 @@ class Engine
 
 			if(strcasecmp(substr($c[self::KEY_CMD_SQL], 0, 5), 'where') === 0) // WHERE exists in SQL
 			{
-				$c[self::KEY_CMD_SQL] = $sql . ' AND ' . substr($c[self::KEY_CMD_SQL], 5); // rm WHERE, add AND
+				$c[self::KEY_CMD_SQL] = $sql . ' AND ' . trim(substr($c[self::KEY_CMD_SQL], 5)); // rm WHERE, add AND
 			}
 			else
 			{
@@ -419,6 +422,7 @@ class Engine
 	{
 		static $map = [
 			'FIRST' => self::OPT_FIRST,
+			'MODEL' => self::OPT_MODEL,
 			'PAGINATION' => self::OPT_PAGINATION,
 			'QUERY' => self::OPT_QUERY
 		];
@@ -494,13 +498,14 @@ class Engine
 				if($options & self::OPT_PAGINATION) // add pagination
 				{
 					// match 'LIMIT x, y (OFFSET z)?', only allow if no LIMIT
-					if(!preg_match('/LIMIT[\s\d,]+(OFFSET[\s\d]+)?$/i', $q))
+					if(!preg_match('/LIMIT[\s]+[\d,]+(OFFSET[\s]+[\d]+)?/i', $q))
 					{
 						$p = [self::KEY_PAGE_RPP => $pagination[self::KEY_PAGE_RPP], self::KEY_PAGE_PAGE =>
 							$pagination[self::KEY_PAGE_PAGE], self::KEY_PAGE_NEXT => 0, self::KEY_PAGE_PREV => 0,
 							self::KEY_PAGE_OFFSET => 0];
 						$p[self::KEY_PAGE_OFFSET] = ($p[self::KEY_PAGE_PAGE] - 1) * $p[self::KEY_PAGE_RPP];
-						$q .= ' LIMIT ' . $p[self::KEY_PAGE_OFFSET] . ', ' . ($p[self::KEY_PAGE_RPP] + 1);
+						$q = rtrim(trim($q), ';') . ' LIMIT ' . $p[self::KEY_PAGE_OFFSET] . ', '
+							. ($p[self::KEY_PAGE_RPP] + 1);
 					}
 					else // LIMIT already exists
 					{
@@ -517,6 +522,36 @@ class Engine
 				if($options & self::OPT_QUERY) // query as string
 				{
 					return $q;
+				}
+				// /model option return first record as model object (but not when using table.[id])
+				else if($options & self::OPT_MODEL && !isset($cmd[self::KEY_CMD_ID]))
+				{
+					// LIMIT clause cannot exist in query SQL for model object
+					if(stripos($cmd[self::KEY_CMD_SQL], 'limit') !== false
+						&& preg_match('/LIMIT[\s]+[\d]+/i', $cmd[self::KEY_CMD_SQL]))
+					{
+						throw new \Exception('Failed to initialize model object, LIMIT clause already exists'
+							. ' in query');
+					}
+
+					// prep query SQL
+					if(strcasecmp(substr($cmd[self::KEY_CMD_SQL], 1, 5), 'where') === 0) // WHERE exists in SQL
+					{
+						// replace WHERE with AND
+						$cmd[self::KEY_CMD_SQL] = ' AND' . substr($cmd[self::KEY_CMD_SQL], 6);
+					}
+
+					$cmd[self::KEY_CMD_SQL] = ' WHERE ' // add record key = :[key]
+							. self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->getKey($cmd[self::KEY_CMD_TABLE])
+							. '=:'
+							. self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->getKey($cmd[self::KEY_CMD_TABLE])
+							. $cmd[self::KEY_CMD_SQL];
+
+					return new Model($cmd[self::KEY_CMD_COLUMNS] === '*' ? []
+						: array_map('trim', explode(',', $cmd[self::KEY_CMD_COLUMNS])), // columns
+						$cmd[self::KEY_CMD_TABLE], // table
+						self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->getKey($cmd[self::KEY_CMD_TABLE]), // key
+						$cmd[self::KEY_CMD_CONN_ID], $params, $cmd[self::KEY_CMD_SQL]); // connection ID, params, sql
 				}
 				else if(isset($p)) // exec query with pagination
 				{
@@ -673,7 +708,14 @@ class Engine
 						{
 							$r = self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($q,
 								isset($args[0]) ? $args[0] : null);
-							return isset($r[0]->count) ? (int)$r[0]->count : 0;
+
+							if(isset($r[0]))
+							{
+								$r = (array)$r[0];
+								return (int)$r['count'] > 0;
+							}
+
+							return false;
 						}
 						break;
 
