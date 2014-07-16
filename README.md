@@ -573,7 +573,7 @@ $user->id = 14; // set primary key column value (required)
 // check if model record exists 'WHERE id = 14 AND is_active = 1'
 if($user->exists())
 {
-	// do something
+	// active user with ID 14 exists
 }
 ```
 Also query params (*named* query params) can be used:
