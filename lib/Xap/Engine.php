@@ -576,6 +576,11 @@ class Engine
 					// select ID or /first option, return first row only
 					if(isset($cmd[self::KEY_CMD_ID]) || $options & self::OPT_FIRST)
 					{
+						if(!preg_match('/LIMIT[\s]+[\d]+/i', $q))
+						{
+							$q = rtrim(rtrim($q), ';') . ' LIMIT 1';
+						}
+
 						$r = self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($q, $params);
 
 						if(isset($r[0]))
