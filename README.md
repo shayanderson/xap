@@ -474,13 +474,17 @@ if($user->load()) // load record data
 	echo $user->fullname;
 }
 ```
-> This can also be done using:
+This can also be done using:
 ```php
 $user = xap('users/model'); // \Xap\Model object
 if($user->load(14)) // load record data with primary key column value
 {
 	echo $user->fullname;
 }
+```
+> Column names can also be defined to optimize the load query:
+```php
+$user = xap('users(fullname)/model'); // only load 'fullname' column
 ```
 
 ##### Add Model Record

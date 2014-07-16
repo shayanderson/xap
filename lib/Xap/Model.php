@@ -124,7 +124,6 @@ class Model
 			return true; // flag data value set
 		}
 
-		$this->{$name} = $value;
 		return false;
 	}
 
@@ -305,14 +304,26 @@ class Model
 			$this->__validateKeyValue();
 		}
 
-		$r = Engine::exec([$this->__getConnectionStr() . ':query SELECT ' . implode(',', $this->getColumns())
-			. ' FROM ' . $this->__table . $this->__query_sql, $this->__query_params]);
+		$cols = count($this->getColumns()) > 1 ? implode(',', $this->getColumns()) : '*';
 
-		if(isset($r[0]) && $this->setData((array)$r[0]))
+		$r = Engine::exec([$this->__getConnectionStr() . ':query SELECT ' . $cols . ' FROM ' . $this->__table
+			. $this->__query_sql, $this->__query_params]);
+
+		if(isset($r[0]))
 		{
-			unset($r);
-			$this->__is_loaded = true;
-			return true;
+			$r = (array)$r[0];
+
+			if($cols === '*') // auto define columns
+			{
+				$this->__data = array_fill_keys(array_keys($r), null);
+			}
+
+			if($this->setData($r))
+			{
+				unset($r);
+				$this->__is_loaded = true;
+				return true;
+			}
 		}
 
 		return false;
@@ -326,6 +337,11 @@ class Model
 	 */
 	public function save($ignore_errors = false)
 	{
+		if(count($this->getData(false)) < 1)
+		{
+			throw new \Exception('Failed to save model record, no columns defined');
+		}
+
 		$this->__validateKeyValue();
 
 		return Engine::exec([$this->__getConnectionStr() . $this->__table . ':mod'
