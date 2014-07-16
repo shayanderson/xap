@@ -108,6 +108,8 @@ $r = xap('users(fullname, is_active).2 WHERE fullname = ? LIMIT 1', ['Name']);
 > Query options can be used when selecting with key like:
 ```php
 $q = xap('users.14/query');
+// or with columns
+$q = xap('users.14(fullname, is_active)/query');
 ```
 
 When selecting with key use integer values only, for example:
