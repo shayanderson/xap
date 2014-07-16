@@ -117,7 +117,8 @@ When selecting with key use integer values only, for example:
 ```php
 $r = xap('users.' . (int)$id);
 ```
->The default primary key column name is `id`, for using different primary key column name see [custom table primary key column name](https://github.com/shayanderson/xap#custom-table-primary-key-column-name)
+> The default primary key column name is `id`, for using different primary key column name see [custom table primary key column name](https://github.com/shayanderson/xap#custom-table-primary-key-column-name)
+<blockquote>Select with key command <i>cannot</i> use commands like <code>:command</code></blockquote>
 
 #### Select Distinct
 Select distinct example query:
@@ -488,7 +489,7 @@ if($user->load(14)) // load record data with primary key column value
 ```php
 $user = xap('users(fullname)/model'); // only load 'fullname' column
 ```
-**Note**: if column names are *not* defined they are automatically set by the model object, meaning that an update following a load (select) will update all the automatically loaded columns instead of defined columns (which is recommended)
+**Note**: if column names are not defined they are automatically set by the model object, meaning that an update following a load (select) will update all the automatically loaded columns instead of defined columns (which is recommended)
 
 ##### Add Model Record
 Adding (inserting) a model record is simple:
