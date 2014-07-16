@@ -547,3 +547,20 @@ else
 	// warn failed to delete user record
 }
 ```
+
+##### Model Record Exists
+Checking if a model record exists is simple:
+```php
+$user = xap('users)/model'); // set model object
+// set model record primary key value (required for exists)
+$user->id = 14; // does record with ID = 14 exist
+// check if model record exists
+if($user->exists())
+{
+	// do something
+}
+else
+{
+	// warn user record does not exist
+}
+```

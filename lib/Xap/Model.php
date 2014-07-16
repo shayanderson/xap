@@ -194,6 +194,27 @@ class Model
 	}
 
 	/**
+	 * Check if record exists in table flag getter
+	 *
+	 * @return boolean
+	 */
+	public function exists()
+	{
+		$this->__validateKeyValue();
+
+		$r = Engine::exec([$this->__getConnectionStr() . ':query SELECT EXISTS(SELECT 1 FROM ' . $this->__table
+			. $this->__query_sql . ') AS is_record', $this->__query_params]);
+
+		if(isset($r[0]))
+		{
+			$r = (array)$r[0];
+			return (int)$r['is_record'] > 0;
+		}
+
+		return false;
+	}
+
+	/**
 	 * Model column names getter
 	 *
 	 * @return array (ex: ['col1', 'col2', ...])
@@ -261,27 +282,6 @@ class Model
 	public function isLoaded()
 	{
 		return $this->__is_loaded;
-	}
-
-	/**
-	 * Check if record exists in table flag getter
-	 *
-	 * @return boolean
-	 */
-	public function isRecord()
-	{
-		$this->__validateKeyValue();
-
-		$r = Engine::exec([$this->__getConnectionStr() . ':query SELECT EXISTS(SELECT 1 FROM ' . $this->__table
-			. $this->__query_sql . ') AS is_record', $this->__query_params]);
-
-		if(isset($r[0]))
-		{
-			$r = (array)$r[0];
-			return (int)$r['is_record'] > 0;
-		}
-
-		return false;
 	}
 
 	/**
