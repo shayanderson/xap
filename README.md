@@ -631,7 +631,7 @@ echo $decorated;
 ```
 Which will output something like:
 ```html
-1 - Shay Anderson - 1<br />2 - Mike Smith - 1<br />3 - John Smith - 1<br />
+1 - Shay Anderson - 1<br />2 - Mike Smith - 1<br />3 - John Smith - 0<br />
 ```
 Also the data can be used in a loop:
 ```php
@@ -640,3 +640,12 @@ foreach($decorated as $str)
 	echo $str;
 }
 ```
+The above decorator can be improved using a *switch* decorator which uses the logic `x?:y` where `x` is used for a *positive* value (> 0 when numeric or length > 0 when string) and `y` is used for a *negative* value, for example change the decorator:
+```php
+$decorated = xap('users LIMIT 3', '{$user_id} - {$fullname} - {$is_active:Yes?:No}<br />');
+```
+Notice the `{$is_active:Yes?:No}` switch decorator. Now the output will be:
+```html
+1 - Shay Anderson - Yes<br />2 - Mike Smith - Yes<br />3 - John Smith - No<br />
+```
+> Decorators work for all commands except: `columns`, `commit`, `debug`, `key`, `log`, `pagination`, `rollback`, `tables`, `transaction`
