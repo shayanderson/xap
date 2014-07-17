@@ -648,7 +648,7 @@ Notice the `{$is_active:Yes?:No}` switch decorator. Now the output will be:
 ```html
 1 - Shay Anderson - Yes<br />2 - Mike Smith - Yes<br />3 - John Smith - No<br />
 ```
-> Decorators work for all commands except: `columns`, `commit`, `debug`, `key`, `log`, `pagination` (but will work with the pagination select query), `rollback`, `tables`, `transaction`
+> Decorators work for all commands except: `columns`, `commit`, `debug`, `key`, `log`, `pagination` (but will work with the [pagination select query](https://github.com/shayanderson/xap#decorators-with-pagination)), `rollback`, `tables`, `transaction`
 
 ##### Switch Decorators
 *Switch* decorators are used for commands like `add`, `count`, `del` `exists` and `mod` when the command returns a `boolean` or `integer` value and use the logic `x?:y` (where `x` is used when value is `true` or `integer > 0`, otherwise `y`), for example:
@@ -678,4 +678,4 @@ echo $decorated['rows'];
 // or loop the decorated data:
 foreach($decorated['rows'] as $v) echo $v;
 ```
-Pagination values are still available in `$decorated['pagination']`.
+> Pagination values are still available in `$decorated['pagination']`.
