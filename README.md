@@ -622,7 +622,8 @@ require_once './lib/Xap/Decorator.php';
 Here is a simple example of a data decorator using a select query:
 ```php
 // SELECT * FROM users LIMIT 3
-$decorated = xap('users LIMIT 3', '{$user_id} - {$fullname} - {$is_active}<br />'); // \Xap\Decorator object
+$decorated = xap('users LIMIT 3',
+	'{$user_id} - {$fullname} - {$is_active}<br />'); // \Xap\Decorator object
 ```
 Now the decorated data can be printed as string:
 ```php
