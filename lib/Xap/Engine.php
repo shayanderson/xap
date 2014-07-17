@@ -74,6 +74,13 @@ class Engine
 		OPT_QUERY = 0x8;
 
 	/**
+	 * Forced query types
+	 */
+	const
+		QUERY_TYPE_AFFECTED = 1,
+		QUERY_TYPE_ROWS = 2;
+
+	/**
 	 * Connections
 	 *
 	 * @var array
@@ -678,6 +685,8 @@ class Engine
 						break;
 
 					case 'call': // call SP/SF
+					case 'call_affected':
+					case 'call_rows':
 						$params_str = '';
 
 						if(isset($args[0]) && is_array($args[0]))
@@ -706,7 +715,8 @@ class Engine
 						else
 						{
 							return self::__decorate(self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($q,
-								$params), $decorator);
+								$params, $cmd[self::KEY_CMD] === 'call_affected' ? self::QUERY_TYPE_AFFECTED
+								: ( $cmd[self::KEY_CMD] === 'call_rows' ? self::QUERY_TYPE_ROWS : 0 )), $decorator);
 						}
 						break;
 
@@ -1025,9 +1035,10 @@ class Engine
 	 *
 	 * @param string $query
 	 * @param array $params (prepared statement params)
+	 * @param int $force_query_type
 	 * @return mixed (array|boolean|int)
 	 */
-	public function query($query, $params = null)
+	public function query($query, $params = null, $force_query_type = 0)
 	{
 		$this->__log('Query: ' . $query);
 		if(is_array($params) && !empty($params))
@@ -1052,11 +1063,13 @@ class Engine
 			$sh = $this->__getPdo()->prepare($query);
 			if($sh->execute( is_array($params) ? $params : null ))
 			{
-				if(preg_match('/^\s*(select|show|describe|optimize|pragma|repair)/i', $query)) // fetch
+				if($force_query_type === self::QUERY_TYPE_ROWS
+					|| preg_match('/^\s*(select|show|describe|optimize|pragma|repair)/i', $query)) // fetch
 				{
 					return $sh->fetchAll( $this->conf(self::KEY_CONF_OBJECTS) ? \PDO::FETCH_CLASS : \PDO::FETCH_ASSOC );
 				}
-				else if(preg_match('/^\s*(delete|insert|update)/i', $query)) // affected
+				else if($force_query_type === self::QUERY_TYPE_AFFECTED
+					|| preg_match('/^\s*(delete|insert|update)/i', $query)) // affected
 				{
 					return $sh->rowCount();
 				}

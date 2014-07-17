@@ -9,7 +9,7 @@ Xap requirements:
 Here is a list of Xap commands:
 
 - [`add`](https://github.com/shayanderson/xap#insert) - insert record (can also use `insert`)
-- [`call`](https://github.com/shayanderson/xap#call-stored-procedurefunction-routines) - call stored procedure or function
+- [`call`](https://github.com/shayanderson/xap#call-stored-procedurefunction-routines) - call stored procedure or function (and [`call_affected`](https://github.com/shayanderson/xap#call-stored-procedurefunction-routines) and [`call_rows`](https://github.com/shayanderson/xap#call-stored-procedurefunction-routines))
 - [`columns`](https://github.com/shayanderson/xap#show-table-columns) - show table columns
 - [`commit`](https://github.com/shayanderson/xap#transactions) - commit transaction
 - [`count`](https://github.com/shayanderson/xap#count-query) - count table records
@@ -268,6 +268,13 @@ xap(':query SET @out = "";'); // set out param
 xap(':call sp_addUserGetId', ['Name Here', 1, ['NOW()'], ['@out']]);
 // get out param value
 $r = xap(':query SELECT @out;');
+```
+The `call` command will return a `boolean` value. If a recordset or affected rows integer is required instead use:
+```php
+// get recordset:
+$rows = xap(':call_rows sp_getActiveUsers'); // array
+// or get affected rows count:
+$affected = xap(':call_affected sp_updateUser'); // integer
 ```
 > Query options can be used with the `call` command like: `xap(':call/query sp_name');`
 
