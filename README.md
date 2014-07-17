@@ -38,6 +38,7 @@ Xap also supports:
 - [Multiple database connections](https://github.com/shayanderson/xap#multiple-database-connections)
 - [Pagination](https://github.com/shayanderson/xap#pagination)
 - [Data Modeling (ORM)](https://github.com/shayanderson/xap#data-modeling)
+- [Data Decorators](https://github.com/shayanderson/xap#data-decorators)
 
 ## Quick Start
 Edit the `xap.bootstrap.php` file and add your database connection params:
@@ -612,3 +613,28 @@ Other useful `\Xap\Model` methods are:
 - `isColumn()` - check if a column exists
 - `isLoaded()` - check if the model record is loaded
 - `setData()` - set the model record data
+
+### Data Decorators
+Data decorators can be used in Xap. First, ensure the `\Xap\Decorator` class is included in the `xap.bootstrap.php` file:
+```php
+require_once './lib/Xap/Decorator.php';
+```
+Here is a simple example of a data decorator using a select query:
+```php
+$decorated = xap('users LIMIT 3', '{$user_id} - {$fullname} - {$is_active}<br />');
+```
+Now the decorated data can be printed as string:
+```php
+echo $decorated;
+```
+Which will output something like:
+```html
+1 - Shay Anderson - 1<br />2 - Mike Smith - 1<br />3 - John Smith - 1<br />
+```
+Also the data can be used in a loop:
+```php
+foreach($decorated as $str)
+{
+	echo $str;
+}
+```

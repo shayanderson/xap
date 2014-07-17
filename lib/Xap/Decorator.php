@@ -219,6 +219,16 @@ class Decorator implements \IteratorAggregate
 	}
 
 	/**
+	 * Get decorated data as array
+	 *
+	 * @return array
+	 */
+	public function getDecorated()
+	{
+		return $this->__decorated;
+	}
+
+	/**
 	 * Iterator getter
 	 *
 	 * @return \ArrayIterator
