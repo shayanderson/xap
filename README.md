@@ -691,3 +691,9 @@ This example would display something like:
 ```html
 14 - Mike Smith - Yes
 ```
+
+##### Other Decorator Object Methods
+Other useful `\Xap\Decorator` methods are:
+
+- `getData()` - get the data as array
+- `getDecorated()` - get the decorated data as array
