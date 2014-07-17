@@ -666,3 +666,16 @@ $decorated = xap('users:del WHERE user_id = ?', [122],
 echo $decorated;
 ```
 Now if the user is deleted the value displayed is `<div class="myclass">User has been deleted</div>` or `<div class="myclass">Failed to delete user</div>` if the user is not deleted
+
+##### Decorators with Pagination
+Decorators can be used with pagination, for example:
+```php
+$decorated = xap('users/pagination WHERE is_active = 1',
+	'{$user_id} - {$fullname} - {$is_active:Yes?:No}<br />');
+
+// display the decorated (and paginated) data:
+echo $decorated['rows'];
+// or loop the decorated data:
+foreach($decorated['rows'] as $v) echo $v;
+```
+Pagination values are still available in `$decorated['pagination']`.
