@@ -502,7 +502,7 @@ class Engine
 		$decorator = null;
 		foreach($args as $k => &$v)
 		{
-			if(is_string($v) && class_exists('\\Xap\\Decorator'))
+			if(is_string($v))
 			{
 				$decorator = $v;
 				unset($k);
