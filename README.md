@@ -658,6 +658,7 @@ $decorated = xap('users:del WHERE user_id = ?', [122],
 echo $decorated;
 ```
 The value `User has been deleted` is displayed if the user exists and has been deleted, otherwise the value `Failed to delete user` is displayed.
+
 Also, a string wrapper can be used when using switch decorators:
 ```php
 $decorated = xap('users:del WHERE user_id = ?', [122],
