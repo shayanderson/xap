@@ -259,12 +259,12 @@ xap(':call sp_name'); // CALL sp_name()
 
 // Call SP/SF with params:
 // CALL sp_addUser('Name Here', '1', NOW())
-xap(':call sp_addUser', 'Name Here', 1, ['NOW()']);
+xap(':call sp_addUser', ['Name Here', 1, ['NOW()']]);
 
 // Call SP/SF with params and out param
 xap(':query SET @out = "";'); // set out param
 // CALL sp_addUser('Name Here', '1', NOW(), @out)
-xap(':call sp_addUserGetId', 'Name Here', 1, ['NOW()'], ['@out']);
+xap(':call sp_addUserGetId', ['Name Here', 1, ['NOW()'], ['@out']]);
 // get out param value
 $r = xap(':query SELECT @out;');
 ```
