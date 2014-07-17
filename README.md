@@ -623,7 +623,7 @@ Here is a simple example of a data decorator using a select query:
 ```php
 // SELECT * FROM users LIMIT 3
 $decorated = xap('users LIMIT 3',
-	'<tr><td>{$user_id}</td><td>{$fullname}</td><td>{$is_active}</td></tr>');
+	'<tr><td>{$id}</td><td>{$fullname}</td><td>{$is_active}</td></tr>');
 // $decorated is \Xap\Decorator object
 ```
 Now the decorated data can be printed as string:
@@ -646,7 +646,7 @@ echo '</table>';
 ```
 The above decorator can be improved using a *value switch* decorator which uses the logic `x?:y` where `x` is used for a *positive* value (`> 0` when numeric or `length > 0` when string) and `y` is used for a *negative* value, for example change the decorator:
 ```php
-$decorated = xap('users LIMIT 3', '{$user_id} - {$fullname} - {$is_active:Yes?:No}<br />');
+$decorated = xap('users LIMIT 3', '{$id} - {$fullname} - {$is_active:Yes?:No}<br />');
 ```
 Notice the `{$is_active:Yes?:No}` switch decorator. Now the output will be:
 ```html
@@ -675,7 +675,7 @@ Now if the user is deleted the value displayed is `<div class="myclass">User has
 Decorators can be used with pagination, for example:
 ```php
 $decorated = xap('users/pagination WHERE is_active = 1',
-	'{$user_id} - {$fullname} - {$is_active:Yes?:No}<br />');
+	'{$id} - {$fullname} - {$is_active:Yes?:No}<br />');
 
 // display the decorated (and paginated) data:
 echo $decorated['rows'];
@@ -687,7 +687,7 @@ foreach($decorated['rows'] as $v) echo $v;
 ##### Decorators with Data Modeling
 Decorators can be used with data modeling, for example:
 ```php
-$user = xap('users/model', '{$user_id} - {$fullname} - {$is_active:Yes?:No}');
+$user = xap('users/model', '{$id} - {$fullname} - {$is_active:Yes?:No}');
 $user->load(14); // load (select) user record
 echo $user; // display decorated data
 ```
