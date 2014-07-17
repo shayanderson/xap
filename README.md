@@ -674,7 +674,7 @@ Now if the user is deleted the value displayed is `<div class="myclass">User has
 ##### Error Decorators
 Error decorators can be used when error exceptions are turned off, for example:
 ```php
-echo  xap(':error', 'Error has occurred ?: No error occurred');
+echo xap(':error', 'Error has occurred ?: No error occurred');
 ```
 Or when display last error:
 ```php
