@@ -269,7 +269,7 @@ xap(':call sp_addUserGetId', ['Name Here', 1, ['NOW()'], ['@out']]);
 // get out param value
 $r = xap(':query SELECT @out;');
 ```
-The `call` command will return a `boolean` value. If a recordset or affected rows integer is required instead use:
+The `call` command will return a `boolean` value. If a recordset `array` or affected rows `integer` is required instead use:
 ```php
 // get recordset:
 $rows = xap(':call_rows sp_getActiveUsers'); // array
