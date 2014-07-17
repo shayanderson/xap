@@ -268,6 +268,7 @@ xap(':call sp_addUserGetId', 'Name Here', 1, ['NOW()'], ['@out']);
 // get out param value
 $r = xap(':query SELECT @out;');
 ```
+> Query options can be used with the `call` command like: `xap(':call/query sp_name');`
 
 #### Transactions
 Transactions are easy, for example:
