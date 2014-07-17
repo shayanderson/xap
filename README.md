@@ -653,7 +653,8 @@ Notice the `{$is_active:Yes?:No}` switch decorator. Now the output will be:
 ##### Switch Decorators
 *Switch* decorators are used for commands like `add`, `count`, `del` and `mod` when the command returns a `boolean` or `integer` value, for example:
 ```php
-$decorated = xap('users:del WHERE user_id = ?', [122], 'User has been deleted ?: Failed to delete user');
+$decorated = xap('users:del WHERE user_id = ?', [122],
+	'User has been deleted ?: Failed to delete user');
 echo $decorated;
 ```
 The value `User has been deleted` is displayed if the user exists and has been deleted, otherwise the value `Failed to delete user` is displayed.
