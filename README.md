@@ -651,7 +651,7 @@ Notice the `{$is_active:Yes?:No}` switch decorator. Now the output will be:
 > Decorators work for all commands except: `columns`, `commit`, `debug`, `key`, `log`, `pagination`, `rollback`, `tables`, `transaction`
 
 ##### Switch Decorators
-*Switch* decorators are used for commands like `add`, `count`, `del` and `mod` when the command returns a `boolean` or `integer` value and use the logic `x?:y` (where `x` is used when value is `true` or `integer > 0`, otherwise `y`), for example:
+*Switch* decorators are used for commands like `add`, `count`, `del` `exists` and `mod` when the command returns a `boolean` or `integer` value and use the logic `x?:y` (where `x` is used when value is `true` or `integer > 0`, otherwise `y`), for example:
 ```php
 $decorated = xap('users:del WHERE user_id = ?', [122],
 	'User has been deleted ?: Failed to delete user');
