@@ -622,23 +622,25 @@ require_once './lib/Xap/Decorator.php';
 Here is a simple example of a data decorator using a select query:
 ```php
 // SELECT * FROM users LIMIT 3
-$decorated = xap('users LIMIT 3', '{$user_id} - {$fullname} - {$is_active}<br />');
+$decorated = xap('users LIMIT 3', '<tr><td>{$user_id}</td><td>{$fullname}</td><td>{$is_active}</tr>');
 // $decorated is \Xap\Decorator object
 ```
 Now the decorated data can be printed as string:
 ```php
-echo $decorated;
+echo '<table>' . $decorated . '</table>';
 ```
 Which will output something like:
 ```html
-1 - Shay Anderson - 1<br />2 - Mike Smith - 1<br />3 - John Smith - 0<br />
+<table><tr><td>1</td><td>Shay Anderson</td><td>1</td></tr><tr><td>2<td></td>Mike Smith</td><td>1</td><tr><td>3</td><td>John Smith</td><td>0</td></tr></table>
 ```
 Also the data can be used in a loop:
 ```php
+echo '<table>';
 foreach($decorated as $str)
 {
 	echo $str;
 }
+echo '</table>';
 ```
 The above decorator can be improved using a *value switch* decorator which uses the logic `x?:y` where `x` is used for a *positive* value (`> 0` when numeric or `length > 0` when string) and `y` is used for a *negative* value, for example change the decorator:
 ```php
