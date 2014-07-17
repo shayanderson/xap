@@ -640,7 +640,7 @@ foreach($decorated as $str)
 	echo $str;
 }
 ```
-The above decorator can be improved using a *switch* decorator which uses the logic `x?:y` where `x` is used for a *positive* value (`> 0` when numeric or `length > 0` when string) and `y` is used for a *negative* value, for example change the decorator:
+The above decorator can be improved using a *value switch* decorator which uses the logic `x?:y` where `x` is used for a *positive* value (`> 0` when numeric or `length > 0` when string) and `y` is used for a *negative* value, for example change the decorator:
 ```php
 $decorated = xap('users LIMIT 3', '{$user_id} - {$fullname} - {$is_active:Yes?:No}<br />');
 ```
@@ -649,3 +649,18 @@ Notice the `{$is_active:Yes?:No}` switch decorator. Now the output will be:
 1 - Shay Anderson - Yes<br />2 - Mike Smith - Yes<br />3 - John Smith - No<br />
 ```
 > Decorators work for all commands except: `columns`, `commit`, `debug`, `key`, `log`, `pagination`, `rollback`, `tables`, `transaction`
+
+##### Switch Decorators
+*Switch* decorators are used for commands like `add`, `count`, `del` and `mod` when the command returns a `boolean` or `integer` value, for example:
+```php
+$decorated = xap('users:del WHERE user_id = ?', [122], 'User has been deleted ?: Failed to delete user');
+echo $decorated;
+```
+The value `User has been deleted` is displayed if the user exists and has been deleted, otherwise the value `Failed to delete user` is displayed.
+Also, a string wrapper can be used when using switch decorators:
+```php
+$decorated = xap('users:del WHERE user_id = ?', [122],
+	'<div class="myclass">{User has been deleted ?: Failed to delete user}</div>');
+echo $decorated;
+```
+Now if the user is deleted the value displayed is `<div class="myclass">User has been deleted</div>` or `<div class="myclass">Failed to delete user</div>` if the user is not deleted
