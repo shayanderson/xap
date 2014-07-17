@@ -671,6 +671,16 @@ echo $decorated;
 ```
 Now if the user is deleted the value displayed is `<div class="myclass">User has been deleted</div>` or `<div class="myclass">Failed to delete user</div>` if the user is not deleted
 
+##### Error Decorators
+Error decorators can be used when error exceptions are turned off, for example:
+```php
+echo  xap(':error', 'Error has occurred ?: No error occurred');
+```
+Or when display last error:
+```php
+if(xap(':error')) echo xap(':error_last', '<div class="error">{$error}</div>');
+```
+
 ##### Decorators with Pagination
 Decorators can be used with pagination, for example:
 ```php
