@@ -3,7 +3,7 @@
  * Xap - MySQL Rapid Development Engine for PHP 5.5.0+
  *
  * @package Xap
- * @version 0.0.2
+ * @version 0.0.3
  * @copyright 2014 Shay Anderson <http://www.shayanderson.com>
  * @license MIT License <http://www.opensource.org/licenses/mit-license.php>
  * @link <https://github.com/shayanderson/xap>
@@ -30,6 +30,13 @@ class Model
 	 * @var array
 	 */
 	private $__data;
+
+	/**
+	 * Decorator pattern
+	 *
+	 * @var string
+	 */
+	private $__decorator;
 
 	/**
 	 * Model record loaded flag
@@ -76,7 +83,8 @@ class Model
 	 * @param array $query_params
 	 * @param string $query_sql
 	 */
-	public function __construct(array $columns, $table, $key, $connection_id, $query_params, $query_sql)
+	public function __construct(array $columns, $table, $key, $connection_id, $query_params, $query_sql,
+		$decorator = null)
 	{
 		$this->__data = array_fill_keys($columns, null);
 		$this->__data[$key] = null; // init primary key column
@@ -85,6 +93,7 @@ class Model
 		$this->__connection_id = $connection_id;
 		$this->__query_params = $query_params;
 		$this->__query_sql = rtrim(rtrim($query_sql), ';') . ' LIMIT 1';
+		$this->__decorator = $decorator;
 	}
 
 	/**
@@ -125,6 +134,18 @@ class Model
 		}
 
 		return false;
+	}
+
+	/**
+	 * Model printer
+	 *
+	 * @return string
+	 */
+	public function __toString()
+	{
+		return $this->__decorator !== null && $this->__is_loaded
+			? (new Decorator($this->__data, $this->__decorator))->__toString() : implode(', ',
+			array_filter($this->__data, function($v) { return $v !== null; }));
 	}
 
 	/**
@@ -290,7 +311,7 @@ class Model
 	 * @param int $id (optional)
 	 * @return boolean (true on record exists and record data set)
 	 */
-	public function load($id = 0) // load model record @return boolean
+	public function load($id = 0)
 	{
 		$this->__is_loaded = false; // reset
 		$id = (int)$id;

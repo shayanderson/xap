@@ -9,6 +9,9 @@ require_once './lib/Xap/Engine.php';
 // import Xap Model class (if using '/model' query option)
 // require_once './lib/Xap/Model.php';
 
+// import Xap Decorator class (if using decorators)
+// require_once './lib/Xap/Decorator.php';
+
 // import xap() function
 require_once './lib/Xap/xap.php';
 

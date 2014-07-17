@@ -3,7 +3,7 @@
  * Xap - MySQL Rapid Development Engine for PHP 5.5.0+
  *
  * @package Xap
- * @version 0.0.2
+ * @version 0.0.3
  * @copyright 2014 Shay Anderson <http://www.shayanderson.com>
  * @license MIT License <http://www.opensource.org/licenses/mit-license.php>
  * @link <https://github.com/shayanderson/xap>
@@ -154,6 +154,23 @@ class Engine
 		}
 
 		$this->__getPdo($connection); // set PDO object
+	}
+
+	/**
+	 * Decorate command data
+	 *
+	 * @param mixed $data
+	 * @param string $decorator
+	 * @return mixed (\Xap\Decorator or data)
+	 */
+	private static function __decorate($data, &$decorator)
+	{
+		if($decorator !== null)
+		{
+			return new Decorator($data, $decorator);
+		}
+
+		return $data;
 	}
 
 	/**
@@ -482,6 +499,17 @@ class Engine
 	{
 		$cmd = array_shift($args);
 
+		$decorator = null;
+		foreach($args as $k => &$v)
+		{
+			if(is_string($v) && class_exists('\\Xap\\Decorator'))
+			{
+				$decorator = $v;
+				unset($k);
+				break;
+			}
+		}
+
 		if(is_string($cmd)) // parse cmd
 		{
 			static $pagination = [self::KEY_PAGE_RPP => 10, self::KEY_PAGE_PAGE => 1];
@@ -550,7 +578,8 @@ class Engine
 						: array_map('trim', explode(',', $cmd[self::KEY_CMD_COLUMNS])), // columns
 						$cmd[self::KEY_CMD_TABLE], // table
 						self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->getKey($cmd[self::KEY_CMD_TABLE]), // key
-						$cmd[self::KEY_CMD_CONN_ID], $params, $cmd[self::KEY_CMD_SQL]); // connection ID, params, sql
+						$cmd[self::KEY_CMD_CONN_ID], $params, $cmd[self::KEY_CMD_SQL], // connection ID, params, sql
+						isset($decorator) ? $decorator : null); // decorator
 				}
 				else if(isset($p)) // exec query with pagination
 				{
@@ -569,7 +598,7 @@ class Engine
 
 					return ['pagination' =>
 						self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->conf(self::KEY_CONF_OBJECTS)
-						? (object)$p : $p, 'rows' => &$r];
+						? (object)$p : $p, 'rows' => self::__decorate($r, $decorator)];
 				}
 				else // exec query
 				{
@@ -585,14 +614,15 @@ class Engine
 
 						if(isset($r[0]))
 						{
-							return $r[0];
+							return self::__decorate($r[0], $decorator);
 						}
 
-						return null; // no record
+						return $decorator !== null ? new Decorator([], '') : null; // no record
 					}
 					else
 					{
-						return self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($q, $params);
+						return self::__decorate(self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($q, $params),
+							$decorator);
 					}
 				}
 			}
@@ -642,24 +672,28 @@ class Engine
 						}
 						else
 						{
-							return self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($q, $params);
+							return self::__decorate(self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($q,
+								$params), $decorator);
 						}
 						break;
 
 					case 'call': // call SP/SF
 						$params_str = '';
 
-						for($i = 0; $i <= count($args) - 1; $i++)
+						if(isset($args[0]) && is_array($args[0]))
 						{
-							$sep = empty($params_str) ? '' : ', ';
-							if(!is_array($args[$i])) // param
+							for($i = 0; $i <= count($args[0]) - 1; $i++)
 							{
-								$params_str .= $sep . '?';
-								$params[] = $args[$i];
-							}
-							else if(isset($args[$i][0]) && strlen($args[$i][0]) > 0) // plain SQL
-							{
-								$params_str .= $sep . $args[$i][0];
+								$sep = empty($params_str) ? '' : ', ';
+								if(!is_array($args[0][$i])) // param
+								{
+									$params_str .= $sep . '?';
+									$params[] = $args[0][$i];
+								}
+								else if(isset($args[0][$i][0]) && strlen($args[0][$i][0]) > 0) // plain SQL
+								{
+									$params_str .= $sep . $args[0][$i][0];
+								}
 							}
 						}
 
@@ -671,7 +705,8 @@ class Engine
 						}
 						else
 						{
-							return self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($q, $params);
+							return self::__decorate(self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($q,
+								$params), $decorator);
 						}
 						break;
 
@@ -716,10 +751,10 @@ class Engine
 							if(isset($r[0]))
 							{
 								$r = (array)$r[0];
-								return (int)$r['count'];
+								return self::__decorate((int)$r['count'], $decorator);
 							}
 
-							return 0;
+							return $decorator !== null ? new Decorator([], '') : 0;
 						}
 						break;
 
@@ -749,17 +784,19 @@ class Engine
 						}
 						else
 						{
-							return self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($q,
-								isset($args[0]) ? $args[0] : null);
+							return self::__decorate(self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($q,
+								isset($args[0]) ? $args[0] : null), $decorator);
 						}
 						break;
 
 					case 'error': // error check
-						return self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->isError();
+						return self::__decorate(self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->isError(),
+							$decorator);
 						break;
 
 					case 'error_last': // get last error
-						return self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->getError();
+						return self::__decorate(self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->getError(),
+							$decorator);
 						break;
 
 					case 'exists': // check if record(s) exists
@@ -778,15 +815,16 @@ class Engine
 							if(isset($r[0]))
 							{
 								$r = (array)$r[0];
-								return (int)$r['is_set'] > 0;
+								return self::__decorate((int)$r['is_set'] > 0, $decorator);
 							}
 
-							return false;
+							return $decorator !== null ? new Decorator([], '') : false;
 						}
 						break;
 
 					case 'id': // get last insert ID
-						return self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->__getPdo()->lastInsertId();
+						return self::__decorate(
+							self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->__getPdo()->lastInsertId(), $decorator);
 						break;
 
 					case 'key': // table primary key column name getter/setter
@@ -855,7 +893,8 @@ class Engine
 						}
 						else
 						{
-							return self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($q, $params);
+							return self::__decorate(
+								self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($q, $params), $decorator);
 						}
 						break;
 
@@ -884,8 +923,9 @@ class Engine
 							return $cmd[self::KEY_CMD_SQL];
 						}
 
-						return self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($cmd[self::KEY_CMD_SQL],
-							isset($args[0]) ? $args[0] : null);
+						return self::__decorate(
+							self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($cmd[self::KEY_CMD_SQL],
+							isset($args[0]) ? $args[0] : null), $decorator);
 						break;
 
 					case 'rollback': // rollback transaction
