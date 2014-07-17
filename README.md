@@ -678,4 +678,16 @@ echo $decorated['rows'];
 // or loop the decorated data:
 foreach($decorated['rows'] as $v) echo $v;
 ```
-> Pagination values are still available in `$decorated['pagination']`.
+> Pagination values are still available in `$decorated['pagination']`
+
+##### Decorators with Data Modeling
+Decorators can be used with data modeling, for example:
+```php
+$user = xap('users/model', '{$user_id} - {$fullname} - {$is_active:Yes?:No}');
+$user->load(14); // load (select) user record
+echo $user; // display decorated data
+```
+This example would display something like:
+```html
+14 - Mike Smith - Yes
+```
