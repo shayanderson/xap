@@ -640,7 +640,7 @@ foreach($decorated as $str)
 	echo $str;
 }
 ```
-The above decorator can be improved using a *switch* decorator which uses the logic `x?:y` where `x` is used for a *positive* value (> 0 when numeric or length > 0 when string) and `y` is used for a *negative* value, for example change the decorator:
+The above decorator can be improved using a *switch* decorator which uses the logic `x?:y` where `x` is used for a *positive* value (`> 0` when numeric or `length > 0` when string) and `y` is used for a *negative* value, for example change the decorator:
 ```php
 $decorated = xap('users LIMIT 3', '{$user_id} - {$fullname} - {$is_active:Yes?:No}<br />');
 ```
