@@ -590,7 +590,7 @@ class Engine
 				}
 				else if(isset($p)) // exec query with pagination
 				{
-					$r = self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($q, $params);
+					$r = self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($q, $params, self::QUERY_TYPE_ROWS);
 
 					if(count($r) > $p[self::KEY_PAGE_RPP])
 					{
@@ -617,7 +617,8 @@ class Engine
 							$q = rtrim(rtrim($q), ';') . ' LIMIT 1';
 						}
 
-						$r = self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($q, $params);
+						$r = self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($q, $params,
+							self::QUERY_TYPE_ROWS);
 
 						if(isset($r[0]))
 						{
@@ -628,8 +629,8 @@ class Engine
 					}
 					else
 					{
-						return self::__decorate(self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($q, $params),
-							$decorator);
+						return self::__decorate(self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($q, $params,
+							self::QUERY_TYPE_ROWS), $decorator);
 					}
 				}
 			}
@@ -680,7 +681,7 @@ class Engine
 						else
 						{
 							return self::__decorate(self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($q,
-								$params), $decorator);
+								$params, self::QUERY_TYPE_AFFECTED), $decorator);
 						}
 						break;
 
@@ -728,7 +729,8 @@ class Engine
 							return $q;
 						}
 
-						$r = self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($q);
+						$r = self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($q, null,
+							self::QUERY_TYPE_ROWS);
 
 						$c = [];
 						if(isset($r) && is_array($r))
@@ -756,7 +758,7 @@ class Engine
 						else
 						{
 							$r = self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($q,
-								isset($args[0]) ? $args[0] : null);
+								isset($args[0]) ? $args[0] : null, self::QUERY_TYPE_ROWS);
 
 							if(isset($r[0]))
 							{
@@ -795,7 +797,7 @@ class Engine
 						else
 						{
 							return self::__decorate(self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($q,
-								isset($args[0]) ? $args[0] : null), $decorator);
+								isset($args[0]) ? $args[0] : null, self::QUERY_TYPE_AFFECTED), $decorator);
 						}
 						break;
 
@@ -820,7 +822,7 @@ class Engine
 						else
 						{
 							$r = self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($q,
-								isset($args[0]) ? $args[0] : null);
+								isset($args[0]) ? $args[0] : null, self::QUERY_TYPE_ROWS);
 
 							if(isset($r[0]))
 							{
@@ -904,7 +906,8 @@ class Engine
 						else
 						{
 							return self::__decorate(
-								self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($q, $params), $decorator);
+								self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($q, $params,
+									self::QUERY_TYPE_AFFECTED), $decorator);
 						}
 						break;
 
@@ -950,7 +953,8 @@ class Engine
 							return $q;
 						}
 
-						$r = self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($q);
+						$r = self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($q, null,
+							self::QUERY_TYPE_ROWS);
 						$t = [];
 						if(isset($r) && is_array($r))
 						{
