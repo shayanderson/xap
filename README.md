@@ -6,6 +6,13 @@ Xap requirements:
 2. PHP [PDO database extension](http://www.php.net/manual/en/book.pdo.php)
 3. Database table names cannot include characters `.`, `/`, `:` or ` ` (whitespace) and cannot start with `[`
 
+Install Xap options:
+
+- Git clone: `git clone https://github.com/shayanderson/xap.git`
+- Subversion checkout URL: `https://github.com/shayanderson/xap/trunk`
+  - Subversion checkout library files only: `https://github.com/shayanderson/xap/trunk/lib/Xap`
+- Download [ZIP file](https://github.com/shayanderson/xap/archive/master.zip)
+
 Here is a list of Xap commands:
 
 - [`add`](https://github.com/shayanderson/xap#insert) - insert record (can also use `insert`)
