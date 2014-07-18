@@ -507,7 +507,7 @@ class Engine
 		$cmd = array_shift($args);
 
 		$decorator = null;
-		foreach($args as $k => &$v)
+		foreach($args as $k => $v)
 		{
 			if(is_string($v))
 			{
