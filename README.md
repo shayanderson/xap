@@ -485,7 +485,8 @@ xap(':pagination', ['rpp' => 10, 'page' => $pg]);
 // execute SELECT query with pagination (SELECT query cannot contain LIMIT clause)
 // SELECT DISTINCT id, fullname FROM users WHERE LENGTH(fullname) > '0' LIMIT x, y
 $r = xap('users(id, fullname)/distinct/pagination WHERE LENGTH(fullname) > ?', [0]);
-// $r['pagination'] contains pagination values: rpp, page, next, prev, offset, next_string, prev_string
+// $r['pagination'] contains pagination values:
+//		rpp, page, next, prev, offset, next_string, prev_string
 // $r['rows'] contains selected rows
 ```
 Pagination can also use [decorators](https://github.com/shayanderson/xap#decorators-with-pagination).
