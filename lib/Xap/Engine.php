@@ -58,10 +58,10 @@ class Engine
 	 * Pagination keys
 	 */
 	const
-		KEY_PAGE_NEXT = 1,
-		KEY_PAGE_OFFSET = 2,
+		KEY_PAGE_NEXT = 'next',
+		KEY_PAGE_OFFSET = 'offset',
 		KEY_PAGE_PAGE = 'page',
-		KEY_PAGE_PREV = 3,
+		KEY_PAGE_PREV = 'prev',
 		KEY_PAGE_RPP = 'rpp';
 
 	/**
