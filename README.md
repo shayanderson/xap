@@ -489,6 +489,14 @@ $r = xap('users(id, fullname)/distinct/pagination WHERE LENGTH(fullname) > ?', [
 //		rpp, page, next, prev, offset, next_string, prev_string
 // $r['rows'] contains selected rows
 ```
+Displaying the previous page numbers can done using:
+```php
+if($r['pagination']->prev > 0)
+{
+	// set last 5 pages viewed, so if on page 12 the pages would be: [7,8,9,10,11]
+	$pages = array_slice(range(1, $r['pagination']->prev), -5);
+}
+```
 Pagination can also use [decorators](https://github.com/shayanderson/xap#decorators-with-pagination).
 > Pagination only works on select commands like `users(id, fullname)/pagination` and will *not* work on other commands like `:query/pagination SELECT id, fullname FROM users`
 
