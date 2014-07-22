@@ -59,9 +59,11 @@ class Engine
 	 */
 	const
 		KEY_PAGE_NEXT = 'next',
+		KEY_PAGE_NEXT_STR = 'next_string',
 		KEY_PAGE_OFFSET = 'offset',
 		KEY_PAGE_PAGE = 'page',
 		KEY_PAGE_PREV = 'prev',
+		KEY_PAGE_PREV_STR = 'prev_string',
 		KEY_PAGE_RPP = 'rpp';
 
 	/**
@@ -519,7 +521,8 @@ class Engine
 
 		if(is_string($cmd)) // parse cmd
 		{
-			static $pagination = [self::KEY_PAGE_RPP => 10, self::KEY_PAGE_PAGE => 1];
+			static $pagination = [self::KEY_PAGE_RPP => 10, self::KEY_PAGE_PAGE => 1, self::KEY_PAGE_NEXT_STR => null,
+				self::KEY_PAGE_PREV_STR => null];
 			$cmd = self::__parseCmd($cmd); // parse cmd
 			$options = &self::__setOptions($cmd);
 			$params = []; // query params
@@ -536,7 +539,9 @@ class Engine
 					{
 						$p = [self::KEY_PAGE_RPP => $pagination[self::KEY_PAGE_RPP], self::KEY_PAGE_PAGE =>
 							$pagination[self::KEY_PAGE_PAGE], self::KEY_PAGE_NEXT => 0, self::KEY_PAGE_PREV => 0,
-							self::KEY_PAGE_OFFSET => 0];
+							self::KEY_PAGE_OFFSET => 0,
+							self::KEY_PAGE_NEXT_STR => $pagination[self::KEY_PAGE_NEXT_STR],
+							self::KEY_PAGE_PREV_STR => $pagination[self::KEY_PAGE_PREV_STR]];
 						$p[self::KEY_PAGE_OFFSET] = ($p[self::KEY_PAGE_PAGE] - 1) * $p[self::KEY_PAGE_RPP];
 						$q = rtrim(trim($q), ';') . ' LIMIT ' . $p[self::KEY_PAGE_OFFSET] . ', '
 							. ($p[self::KEY_PAGE_RPP] + 1);
@@ -601,6 +606,26 @@ class Engine
 					if($p[self::KEY_PAGE_PAGE] > 1)
 					{
 						$p[self::KEY_PAGE_PREV] = $p[self::KEY_PAGE_PAGE] - 1;
+					}
+
+					if($p[self::KEY_PAGE_NEXT_STR] !== null && $p[self::KEY_PAGE_NEXT] > 0) // next decorator
+					{
+						$p[self::KEY_PAGE_NEXT_STR] = str_replace('{$next}', $p[self::KEY_PAGE_NEXT],
+							$p[self::KEY_PAGE_NEXT_STR]);
+					}
+					else
+					{
+						$p[self::KEY_PAGE_NEXT_STR] = '';
+					}
+
+					if($p[self::KEY_PAGE_PREV_STR] !== null && $p[self::KEY_PAGE_PREV] > 0) // prev decorator
+					{
+						$p[self::KEY_PAGE_PREV_STR] = str_replace('{$prev}', $p[self::KEY_PAGE_PREV],
+							$p[self::KEY_PAGE_PREV_STR]);
+					}
+					else
+					{
+						$p[self::KEY_PAGE_PREV_STR] = '';
 					}
 
 					return ['pagination' =>
@@ -916,13 +941,19 @@ class Engine
 						{
 							foreach($args[0] as $k => $v)
 							{
-								if(isset($pagination[$k]))
+								if(isset($pagination[$k]) || array_key_exists($k, $pagination))
 								{
-									$v = (int)$v;
-									if($v > 0)
+									if($k === self::KEY_PAGE_PAGE || $k === self::KEY_PAGE_RPP)
 									{
-										$pagination[$k] = $v;
+										$v = (int)$v;
+
+										if($v < 1)
+										{
+											continue;
+										}
 									}
+
+									$pagination[$k] = $v;
 								}
 							}
 						}

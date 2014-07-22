@@ -485,9 +485,10 @@ xap(':pagination', ['rpp' => 10, 'page' => $pg]);
 // execute SELECT query with pagination (SELECT query cannot contain LIMIT clause)
 // SELECT DISTINCT id, fullname FROM users WHERE LENGTH(fullname) > '0' LIMIT x, y
 $r = xap('users(id, fullname)/distinct/pagination WHERE LENGTH(fullname) > ?', [0]);
-// $r['pagination'] contains pagination values: rpp, page, next, prev, offset
+// $r['pagination'] contains pagination values: rpp, page, next, prev, offset, next_string, prev_string
 // $r['rows'] contains selected rows
 ```
+Pagination can also use [decorators](https://github.com/shayanderson/xap#decorators-with-pagination).
 > Pagination only works on select commands like `users(id, fullname)/pagination` and will *not* work on other commands like `:query/pagination SELECT id, fullname FROM users`
 
 ### Data Modeling
@@ -707,6 +708,20 @@ echo $decorated['rows'];
 foreach($decorated['rows'] as $v) echo $v;
 ```
 > Pagination values are still available in `$decorated['pagination']`
+
+Decorators can also be used for the pagination values `next_string` and `prev_string`, for example:
+```php
+// set decorators for 'next_string' and 'prev_string'
+xap(':pagination', ['next_string' => '<a href="?pg={$next}">Next</a>',
+	'prev_string' => '<a href="?pg={$prev}">Prev</a>'])
+
+$data = xap('users/pagination');
+```
+Now when the value `$data['pagination']->next_string` is called and there is a next page it will output HTML like:
+```html
+<a href="?pg=2">Next</a>
+```
+And likewise for the value `$data['pagination']->prev_string`. If there is no *next* page then no value will be set, and same for the *previous* page value.
 
 ##### Decorators with Data Modeling
 Decorators can be used with data modeling, for example:
