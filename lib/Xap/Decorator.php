@@ -134,9 +134,12 @@ class Decorator implements \IteratorAggregate
 						{
 							$switch = false;
 
-							if(ctype_digit($v[$m[1]]) && (int)$v[$m[1]] > 0)
+							if(ctype_digit($v[$m[1]]))
 							{
-								$switch = true;
+								if((int)$v[$m[1]] > 0)
+								{
+									$switch = true;
+								}
 							}
 							else if(strlen($v[$m[1]]) > 0)
 							{
