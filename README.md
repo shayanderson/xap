@@ -57,7 +57,7 @@ xap([
 	'database' => 'test',
 	'user' => 'myuser',
 	'password' => 'mypass',
-	'errors' => true, // true: throw Exceptions, false: no Exceptions, use error methods
+	'errors' => true, // true: Exceptions, false: no Exceptions, use error methods
 	'debug' => true // turn logging on/off
 ```
 
@@ -93,13 +93,15 @@ $r = xap('users WHERE is_active = 1'); // SELECT * FROM users WHERE is_active = 
 #### Select Where
 Select query with named parameters:
 ```php
-// SELECT fullname, email FROM users WHERE is_active = '1' AND fullname = 'Shay Anderson'
-$r = xap('users(fullname, email) WHERE is_active = :active AND fullname = :name LIMIT 2',
-	['active' => 1, 'name' => 'Shay Anderson']);
+// SELECT fullname, email FROM users WHERE is_active = '1' 
+//	AND fullname = 'Shay Anderson'
+$r = xap('users(fullname, email) WHERE is_active = :active AND fullname = :name'
+	. ' LIMIT 2', ['active' => 1, 'name' => 'Shay Anderson']);
 ```
 Select query with question mark parameters:
 ```php
-// SELECT fullname, email FROM users WHERE is_active = 1 AND fullname = 'Shay Anderson' LIMIT 2
+// SELECT fullname, email FROM users WHERE is_active = 1 
+//	AND fullname = 'Shay Anderson' LIMIT 2
 $r = xap('users(fullname, email) WHERE is_active = ? AND fullname = ? LIMIT 2',
 	[1, 'Shay Anderson']);
 ```
