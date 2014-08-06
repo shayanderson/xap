@@ -141,7 +141,8 @@ $r = xap('users(fullname)/distinct'); // SELECT DISTINCT fullname FROM users
 #### Insert
 Simple insert example:
 ```php
-// INSERT INTO users (fullname, is_active, created) VALUES('Name Here', '1', NOW())
+// INSERT INTO users (fullname, is_active, created) 
+//	VALUES('Name Here', '1', NOW())
 $affected_rows = xap('users:add', ['fullname' => 'Name Here', 'is_active' => 1,
 	'created' => ['NOW()']]);
 
@@ -159,7 +160,8 @@ $affected_rows = xap('users:replace', ['id' => 5 'fullname' => 'Name Here',
 Insert query and get insert ID:
 ```php
 // INSERT INTO users (fullname, is_active, created) VALUES('Name Here', '1', NOW())
-xap('users:add', ['fullname' => 'Name Here', 'is_active' => 1, 'created' => ['NOW()']]);
+xap('users:add', ['fullname' => 'Name Here', 'is_active' => 1, 
+	'created' => ['NOW()']]);
 
 // get insert ID
 $insert_id = xap(':id');
@@ -190,8 +192,8 @@ $affected_rows = xap('users:add', new User);
 Simple update query example:
 ```php
 // UPDATE users SET fullname = 'Shay Anderson' WHERE user_id = '2'
-$affected_rows = xap('users:mod WHERE user_id = :user_id', ['fullname' => 'Shay Anderson'],
-	['user_id' => 2]);
+$affected_rows = xap('users:mod WHERE user_id = :user_id', 
+	['fullname' => 'Shay Anderson'], ['user_id' => 2]);
 
 // can also use action ':update'
 // xap('users:update', ...);
@@ -429,7 +431,8 @@ $affected_rows = xap('users:mod/low_priority/ignore WHERE user_id = :user_id',
 ##### Query Option
 The `query` option can be used to return the query string only, without executing the query (for debugging), for example:
 ```php
-$r = xap('users(fullname)/distinct/query'); // returns string 'SELECT DISTINCT fullname FROM users'
+// returns string 'SELECT DISTINCT fullname FROM users'
+$r = xap('users(fullname)/distinct/query');
 ```
 > The following commands can use the `query` option: `add`, `call`, `columns`, `count`, `del`, `mod`, `query`, `replace`, and `tables`
 
@@ -658,8 +661,9 @@ echo '<table>' . $decorated . '</table>';
 ```
 Which will output something like:
 ```html
-<table><tr><td>1</td><td>Shay Anderson</td><td>1</td></tr><tr><td>2</td><td>Mike Smith</td>
-<td>1</td></tr><tr><td>3</td><td>John Smith</td><td>0</td></tr></table>
+<table><tr><td>1</td><td>Shay Anderson</td><td>1</td></tr>
+<tr><td>2</td><td>Mike Smith</td><td>1</td></tr>
+<tr><td>3</td><td>John Smith</td><td>0</td></tr></table>
 ```
 Also the data can be used in a loop:
 ```php
