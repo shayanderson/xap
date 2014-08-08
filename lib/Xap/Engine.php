@@ -1002,6 +1002,11 @@ class Engine
 						return self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->__getPdo()->beginTransaction();
 						break;
 
+					case 'truncate': // truncate table
+						return self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query('TRUNCATE '
+							. $cmd[self::KEY_CMD_TABLE]);
+						break;
+
 					default: // unknown command
 						throw new \Exception('Invalid command \'' . $cmd[self::KEY_CMD] . '\'');
 						break;

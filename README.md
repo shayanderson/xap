@@ -35,6 +35,7 @@ Here is a list of Xap commands:
 - [`rollback`](https://github.com/shayanderson/xap#transactions) - rollback transaction
 - [`tables`](https://github.com/shayanderson/xap#show-tables) - show database tables
 - [`transaction`](https://github.com/shayanderson/xap#transactions) - start transaction
+- [`truncate`](https://github.com/shayanderson/xap#truncate-table) - truncate table
 
 Xap also supports:
 
@@ -93,14 +94,14 @@ $r = xap('users WHERE is_active = 1'); // SELECT * FROM users WHERE is_active = 
 #### Select Where
 Select query with named parameters:
 ```php
-// SELECT fullname, email FROM users WHERE is_active = '1' 
+// SELECT fullname, email FROM users WHERE is_active = '1'
 //	AND fullname = 'Shay Anderson'
 $r = xap('users(fullname, email) WHERE is_active = :active AND fullname = :name'
 	. ' LIMIT 2', ['active' => 1, 'name' => 'Shay Anderson']);
 ```
 Select query with question mark parameters:
 ```php
-// SELECT fullname, email FROM users WHERE is_active = 1 
+// SELECT fullname, email FROM users WHERE is_active = 1
 //	AND fullname = 'Shay Anderson' LIMIT 2
 $r = xap('users(fullname, email) WHERE is_active = ? AND fullname = ? LIMIT 2',
 	[1, 'Shay Anderson']);
@@ -141,7 +142,7 @@ $r = xap('users(fullname)/distinct'); // SELECT DISTINCT fullname FROM users
 #### Insert
 Simple insert example:
 ```php
-// INSERT INTO users (fullname, is_active, created) 
+// INSERT INTO users (fullname, is_active, created)
 //	VALUES('Name Here', '1', NOW())
 $affected_rows = xap('users:add', ['fullname' => 'Name Here', 'is_active' => 1,
 	'created' => ['NOW()']]);
@@ -151,7 +152,7 @@ $affected_rows = xap('users:add', ['fullname' => 'Name Here', 'is_active' => 1,
 ```
 The `replace` command can also be used, for example:
 ```php
-// REPLACE INTO users (id, fullname, is_active, created) 
+// REPLACE INTO users (id, fullname, is_active, created)
 //	VALUES(5, 'Name Here', '1', NOW())
 $affected_rows = xap('users:replace', ['id' => 5 'fullname' => 'Name Here',
 	'is_active' => 1, 'created' => ['NOW()']]);
@@ -161,7 +162,7 @@ $affected_rows = xap('users:replace', ['id' => 5 'fullname' => 'Name Here',
 Insert query and get insert ID:
 ```php
 // INSERT INTO users (fullname, is_active, created) VALUES('Name Here', '1', NOW())
-xap('users:add', ['fullname' => 'Name Here', 'is_active' => 1, 
+xap('users:add', ['fullname' => 'Name Here', 'is_active' => 1,
 	'created' => ['NOW()']]);
 
 // get insert ID
@@ -193,7 +194,7 @@ $affected_rows = xap('users:add', new User);
 Simple update query example:
 ```php
 // UPDATE users SET fullname = 'Shay Anderson' WHERE user_id = '2'
-$affected_rows = xap('users:mod WHERE user_id = :user_id', 
+$affected_rows = xap('users:mod WHERE user_id = :user_id',
 	['fullname' => 'Shay Anderson'], ['user_id' => 2]);
 
 // can also use action ':update'
@@ -263,6 +264,12 @@ if($has_records) // do something
 // use query params example:
 $is_record = xap('users:exists WHERE user_id = ? AND is_active = 1', [2])
 if($is_record) // do something
+```
+
+#### Truncate Table
+A table can be truncated using:
+```php
+xap('table_name:truncate');
 ```
 
 #### Call Stored Procedure/Function (Routines)
