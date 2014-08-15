@@ -661,7 +661,7 @@ Here is a simple example of a data decorator using a select query:
 // SELECT * FROM users LIMIT 3
 $decorated = xap('users LIMIT 3',
 	'<tr><td>{$id}</td><td>{$fullname}</td><td>{$is_active}</td></tr>');
-// $decorated is \Xap\Decorator object
+// $decorated is string
 ```
 Now the decorated data can be printed as string:
 ```php
@@ -673,18 +673,9 @@ Which will output something like:
 <tr><td>2</td><td>Mike Smith</td><td>1</td></tr>
 <tr><td>3</td><td>John Smith</td><td>0</td></tr></table>
 ```
-Also the data can be used in a loop:
-```php
-echo '<table>';
-foreach($decorated as $str)
-{
-	echo $str;
-}
-echo '</table>';
-```
 The above decorator can be improved using a *value switch* decorator which uses the logic `x?:y` where `x` is used for a *positive* value (`> 0` when numeric or `length > 0` when string) and `y` is used for a *negative* value, for example change the decorator:
 ```php
-$decorated = xap('users LIMIT 3', '{$id} - {$fullname} - {$is_active:Yes?:No}<br />');
+echo xap('users LIMIT 3', '{$id} - {$fullname} - {$is_active:Yes?:No}<br />');
 ```
 Notice the `{$is_active:Yes?:No}` switch decorator. Now the output will be:
 ```html
@@ -692,22 +683,13 @@ Notice the `{$is_active:Yes?:No}` switch decorator. Now the output will be:
 ```
 > Decorators work for all commands except: `columns`, `commit`, `debug`, `key`, `log`, `pagination` (but will work with the [pagination select query](https://github.com/shayanderson/xap#decorators-with-pagination)), `rollback`, `tables`, `transaction`
 
-##### Switch Decorators
-*Switch* decorators are used for commands like `add`, `count`, `del` `exists` and `mod` when the command returns a `boolean` or `integer` value and use the logic `x?:y` (where `x` is used when value is `true` or `integer > 0`, otherwise `y`), for example:
+##### Test Decorators
+*Test* decorators are used for commands like `add`, `count`, `del` `exists` and `mod` when the command returns a `boolean` or `integer` value and use the logic `x?:y` (where `x` is used when value is `true` or `integer > 0`, otherwise `y`), for example:
 ```php
-$decorated = xap('users:del WHERE user_id = ?', [122],
+echo xap('users:del WHERE user_id = ?', [122],
 	'User has been deleted ?: Failed to delete user');
-echo $decorated;
 ```
 The value `User has been deleted` is displayed if the user exists and has been deleted, otherwise the value `Failed to delete user` is displayed.
-
-Also, a string wrapper can be used when using switch decorators:
-```php
-$decorated = xap('users:del WHERE user_id = ?', [122],
-	'<div class="myclass">{User has been deleted ?: Failed to delete user}</div>');
-echo $decorated;
-```
-Now if the user is deleted the value displayed is `<div class="myclass">User has been deleted</div>` or `<div class="myclass">Failed to delete user</div>` if the user is not deleted
 
 ##### Error Decorators
 Error decorators can be used when error exceptions are turned off, for example:
@@ -727,8 +709,6 @@ $decorated = xap('users/pagination WHERE is_active = 1',
 
 // display the decorated (and paginated) data:
 echo $decorated['rows'];
-// or loop the decorated data:
-foreach($decorated['rows'] as $v) echo $v;
 ```
 > Pagination values are still available in `$decorated['pagination']`
 
@@ -756,10 +736,3 @@ echo $user; // display decorated data
 This example would display something like:
 ```html
 14 - Mike Smith - Yes
-```
-
-##### Other Decorator Object Methods
-Other useful `\Xap\Decorator` methods are:
-
-- `getData()` - get the data as array
-- `getDecorated()` - get the decorated data as array
