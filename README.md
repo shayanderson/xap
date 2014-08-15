@@ -665,7 +665,14 @@ $decorated = xap('users LIMIT 3',
 ```
 Now the decorated data can be printed as string:
 ```php
-echo '<table>' . $decorated . '</table>';
+if(!empty($decorated))
+{
+	echo '<table>' . $decorated . '</table>';
+}
+else
+{
+	echo 'No records found';
+}
 ```
 Which will output something like:
 ```html
