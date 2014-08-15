@@ -144,7 +144,7 @@ class Model
 	public function __toString()
 	{
 		return $this->__decorator !== null && $this->__is_loaded
-			? (new Decorator($this->__data, $this->__decorator))->__toString() : implode(', ',
+			? Decorate::data($this->__data, $this->__decorator) : implode(', ',
 			array_filter($this->__data, function($v) { return $v !== null; }));
 	}
 
