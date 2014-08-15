@@ -693,7 +693,7 @@ Notice the `{$is_active:Yes?:No}` switch decorator. Now the output will be:
 ##### Decorator Filters
 Callable decorator filters can be used with decorators, for example:
 ```php
-$decorated = xap('users LIMIT 3', '{$id} - {$fullname} - {$is_active:Yes?:No}<br />',
+echo xap('users LIMIT 3', '{$id} - {$fullname} - {$is_active:Yes?:No}<br />',
 	['upper' => function($row) { return strtoupper($row['fullname']); }]);
 ```
 Notice the `{$fullname:upper}` where `upper` is the filter then, and in the array of filters the key `upper` is used to denote the filter by name. Now the output will be:
