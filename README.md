@@ -652,9 +652,9 @@ Other useful `\Xap\Model` methods are:
 - `setData()` - set the model record data
 
 ### Data Decorators
-Data decorators can be used in Xap. First, ensure the `\Xap\Decorator` class is included in the `xap.bootstrap.php` file:
+Data decorators can be used in Xap. First, ensure the `\Xap\Decorate` class is included in the `xap.bootstrap.php` file:
 ```php
-require_once './lib/Xap/Decorator.php';
+require_once './lib/Xap/Decorate.php';
 ```
 Here is a simple example of a data decorator using a select query:
 ```php
