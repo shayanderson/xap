@@ -696,7 +696,7 @@ Callable decorator filters can be used with decorators, for example:
 echo xap('users LIMIT 3', '{$id} - {$fullname:upper} - {$is_active:Yes?:No}<br />',
 	['upper' => function($row) { return strtoupper($row['fullname']); }]);
 ```
-Notice the `{$fullname:upper}` where `upper` is the filter then, and in the array of filters the key `upper` is used to denote the filter by name. Now the output will be:
+Notice the `{$fullname:upper}` where `upper` is the filter name, and in the array of filters the key `upper` is used to denote the filter by name. Now the output will be:
 ```html
 1 - SHAY ANDERSON - Yes<br />2 - MIKE SMITH - Yes<br />3 - JOHN SMITH - No<br />
 ```
