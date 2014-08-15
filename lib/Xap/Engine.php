@@ -193,6 +193,8 @@ class Engine
 	{
 		$this->__error = $message;
 
+		$this->__log('Error: ' . $message);
+
 		if($this->__conf[self::KEY_CONF_ERRORS])
 		{
 			if($this->__conf[self::KEY_CONF_ERROR_HANDLER] !== null)
@@ -201,8 +203,6 @@ class Engine
 			}
 			else
 			{
-				$this->__log('Error: ' . $message);
-
 				if($this->__conf[self::KEY_CONF_DEBUG] && $this->__conf[self::KEY_CONF_LOG_HANDLER] === null)
 				{
 					print_r($this->getLog()); // print debug log
@@ -1100,27 +1100,30 @@ class Engine
 
 		try
 		{
-			$sh = $this->__getPdo()->prepare($query);
-			if($sh->execute( is_array($params) ? $params : null ))
+			if($this->__getPdo()) // verify valid connection (suppress error)
 			{
-				if($force_query_type === self::QUERY_TYPE_ROWS
-					|| preg_match('/^\s*(select|show|describe|optimize|pragma|repair)/i', $query)) // fetch
+				$sh = $this->__getPdo()->prepare($query);
+				if($sh->execute( is_array($params) ? $params : null ))
 				{
-					return $sh->fetchAll( $this->conf(self::KEY_CONF_OBJECTS) ? \PDO::FETCH_CLASS : \PDO::FETCH_ASSOC );
+					if($force_query_type === self::QUERY_TYPE_ROWS
+						|| preg_match('/^\s*(select|show|describe|optimize|pragma|repair)/i', $query)) // fetch
+					{
+						return $sh->fetchAll( $this->conf(self::KEY_CONF_OBJECTS) ? \PDO::FETCH_CLASS : \PDO::FETCH_ASSOC );
+					}
+					else if($force_query_type === self::QUERY_TYPE_AFFECTED
+						|| preg_match('/^\s*(delete|insert|update)/i', $query)) // affected
+					{
+						return $sh->rowCount();
+					}
+					else // other
+					{
+						return true;
+					}
 				}
-				else if($force_query_type === self::QUERY_TYPE_AFFECTED
-					|| preg_match('/^\s*(delete|insert|update)/i', $query)) // affected
+				else
 				{
-					return $sh->rowCount();
+					$this->__error($sh->errorInfo());
 				}
-				else // other
-				{
-					return true;
-				}
-			}
-			else
-			{
-				$this->__error($sh->errorInfo());
 			}
 		}
 		catch(\PDOException $ex)
