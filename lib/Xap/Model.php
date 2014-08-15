@@ -179,7 +179,7 @@ class Model
 	 * @return boolean (true on insert)
 	 * @throws \Exception (when no model columns defined)
 	 */
-	public function add($ignore_errors = false)
+	public function add($ignore_errors = true)
 	{
 		if(count($this->getData(false)) < 1)
 		{
@@ -206,7 +206,7 @@ class Model
 	 * @param type $ignore_errors (ignore delete errors)
 	 * @return boolean (true on delete)
 	 */
-	public function delete($ignore_errors = false)
+	public function delete($ignore_errors = true)
 	{
 		$this->__validateKeyValue();
 
@@ -356,7 +356,7 @@ class Model
 	 * @param boolean $ignore_errors (ignore update error)
 	 * @return boolean (true on update)
 	 */
-	public function save($ignore_errors = false)
+	public function save($ignore_errors = true)
 	{
 		if(count($this->getData(false)) < 1)
 		{
