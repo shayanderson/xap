@@ -690,6 +690,24 @@ Notice the `{$is_active:Yes?:No}` switch decorator. Now the output will be:
 ```
 > Decorators work for all commands except: `columns`, `commit`, `debug`, `key`, `log`, `pagination` (but will work with the [pagination select query](https://github.com/shayanderson/xap#decorators-with-pagination)), `rollback`, `tables`, `transaction`
 
+##### Decorator Filters
+Callable decorator filters can be used with decorators, for example:
+```php
+$decorated = xap('users LIMIT 3', '{$id} - {$fullname} - {$is_active:Yes?:No}<br />',
+	['upper' => function($row) { return strtoupper($row['fullname']); }]);
+```
+Notice the `{$fullname:upper}` where `upper` is the filter then, and in the array of filters the key `upper` is used to denote the filter by name. Now the output will be:
+```html
+1 - SHAY ANDERSON - Yes<br />2 - MIKE SMITH - Yes<br />3 - JOHN SMITH - No<br />
+```
+> When using decorate filters the array of callable filters must be passed to the Xap directly *after* the decorator string
+
+When using decorate filter(s) with string values, like error decorators, the value passed to the callable filter is the value and not an array, for example:
+```php
+echo xap(':error_last', '<b>{$error:upper}</b>',
+	['upper' => function($error) { return strtoupper($error); }]);
+```
+
 ##### Test Decorators
 *Test* decorators are used for commands like `add`, `count`, `del` `exists` and `mod` when the command returns a `boolean` or `integer` value and use the logic `x?:y` (where `x` is used when value is `true` or `integer > 0`, otherwise `y`), for example:
 ```php

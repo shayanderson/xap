@@ -39,6 +39,13 @@ class Model
 	private $__decorator;
 
 	/**
+	 * Decorator callable filters
+	 *
+	 * @var mixed (array|null)
+	 */
+	private $__decorator_filters;
+
+	/**
 	 * Model record loaded flag
 	 *
 	 * @var boolean
@@ -84,7 +91,7 @@ class Model
 	 * @param string $query_sql
 	 */
 	public function __construct(array $columns, $table, $key, $connection_id, $query_params, $query_sql,
-		$decorator = null)
+		&$decorator = null, &$decorator_filters = null)
 	{
 		$this->__data = array_fill_keys($columns, null);
 		$this->__data[$key] = null; // init primary key column
@@ -93,7 +100,8 @@ class Model
 		$this->__connection_id = $connection_id;
 		$this->__query_params = $query_params;
 		$this->__query_sql = rtrim(rtrim($query_sql), ';') . ' LIMIT 1';
-		$this->__decorator = $decorator;
+		$this->__decorator = &$decorator;
+		$this->__decorator_filters = &$decorator_filters;
 	}
 
 	/**
@@ -144,7 +152,7 @@ class Model
 	public function __toString()
 	{
 		return $this->__decorator !== null && $this->__is_loaded
-			? Decorate::data($this->__data, $this->__decorator) : implode(', ',
+			? Decorate::data($this->__data, $this->__decorator, $this->__decorator_filters) : implode(', ',
 			array_filter($this->__data, function($v) { return $v !== null; }));
 	}
 

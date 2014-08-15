@@ -178,40 +178,41 @@ class Engine
 	 * Decorate command data
 	 *
 	 * @param mixed $data
+	 * @param mixed $filters
 	 * @param string $decorator
 	 * @return mixed (string or data)
 	 */
-	private static function __decorate($data, &$decorator, $type)
+	private static function __decorate($data, &$decorator, &$filters, $type)
 	{
 		if($decorator !== null)
 		{
 			switch($type)
 			{
 				case self::DECORATE_TYPE_ARRAY:
-					return Decorate::data($data, $decorator);
+					return Decorate::data($data, $decorator, $filters);
 					break;
 
 				case self::DECORATE_TYPE_DETECT: // detect decorate type
 					if(is_array($data))
 					{
-						return Decorate::data($data, $decorator);
+						return Decorate::data($data, $decorator, $filters);
 					}
 					else if(strpos($decorator, Decorate::PLACEHOLDER_TEST_VALUE_SEP) !== false)
 					{
-						return Decorate::test($data, $decorator);
+						return Decorate::test($data, $decorator, $filters);
 					}
 					else
 					{
-						return Decorate::string($data, $decorator);
+						return Decorate::string($data, $decorator, $filters);
 					}
 					break;
 
 				case self::DECORATE_TYPE_STRING:
-					return Decorate::string($data, $decorator);
+					return Decorate::string($data, $decorator, $filters);
 					break;
 
 				case self::DECORATE_TYPE_TEST:
-					return Decorate::test($data, $decorator);
+					return Decorate::test($data, $decorator, $filters);
 					break;
 			}
 		}
@@ -550,13 +551,21 @@ class Engine
 	{
 		$cmd = array_shift($args);
 
-		$decorator = null;
+		$decorator = $decorator_filters = null;
 		foreach($args as $k => $v)
 		{
 			if(is_string($v))
 			{
 				$decorator = $v;
-				unset($k);
+				unset($args[$k]);
+
+				// detect decorator callable filters
+				if(isset($args[++$k]) && is_array($args[$k]) && is_callable(current($args[$k])))
+				{
+					$decorator_filters = $args[$k];
+					unset($args[$k]);
+				}
+
 				break;
 			}
 		}
@@ -633,7 +642,7 @@ class Engine
 						$cmd[self::KEY_CMD_TABLE], // table
 						self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->getKey($cmd[self::KEY_CMD_TABLE]), // key
 						$cmd[self::KEY_CMD_CONN_ID], $params, $cmd[self::KEY_CMD_SQL], // connection ID, params, sql
-						isset($decorator) ? $decorator : null); // decorator
+						$decorator, $decorator_filters); // decorator
 				}
 				else if(isset($p)) // exec query with pagination
 				{
@@ -672,7 +681,8 @@ class Engine
 
 					return ['pagination' =>
 						self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->conf(self::KEY_CONF_OBJECTS)
-						? (object)$p : $p, 'rows' => self::__decorate($r, $decorator, self::DECORATE_TYPE_ARRAY)];
+						? (object)$p : $p, 'rows' => self::__decorate($r, $decorator, $decorator_filters,
+						self::DECORATE_TYPE_ARRAY)];
 				}
 				else // exec query
 				{
@@ -689,7 +699,7 @@ class Engine
 
 						if(isset($r[0]))
 						{
-							return self::__decorate($r[0], $decorator, self::DECORATE_TYPE_ARRAY);
+							return self::__decorate($r[0], $decorator, $decorator_filters, self::DECORATE_TYPE_ARRAY);
 						}
 
 						return $decorator !== null ? '' : null; // no record
@@ -697,7 +707,7 @@ class Engine
 					else
 					{
 						return self::__decorate(self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($q, $params,
-							self::QUERY_TYPE_ROWS), $decorator, self::DECORATE_TYPE_ARRAY);
+							self::QUERY_TYPE_ROWS), $decorator, $decorator_filters, self::DECORATE_TYPE_ARRAY);
 					}
 				}
 			}
@@ -748,7 +758,8 @@ class Engine
 						else
 						{
 							return self::__decorate(self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($q,
-								$params, self::QUERY_TYPE_AFFECTED), $decorator, self::DECORATE_TYPE_TEST);
+								$params, self::QUERY_TYPE_AFFECTED), $decorator, $decorator_filters,
+								self::DECORATE_TYPE_TEST);
 						}
 						break;
 
@@ -785,7 +796,7 @@ class Engine
 							return self::__decorate(self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($q,
 								$params, $cmd[self::KEY_CMD] === 'call_affected' ? self::QUERY_TYPE_AFFECTED
 								: ( $cmd[self::KEY_CMD] === 'call_rows' ? self::QUERY_TYPE_ROWS : 0 )), $decorator,
-								$cmd[self::KEY_CMD] === 'call_rows' ? self::DECORATE_TYPE_ARRAY
+								$decorator_filters,	$cmd[self::KEY_CMD] === 'call_rows' ? self::DECORATE_TYPE_ARRAY
 								: self::DECORATE_TYPE_TEST);
 						}
 						break;
@@ -832,10 +843,12 @@ class Engine
 							if(isset($r[0]))
 							{
 								$r = (array)$r[0];
-								return self::__decorate((int)$r['count'], $decorator, self::DECORATE_TYPE_TEST);
+								return self::__decorate((int)$r['count'], $decorator, $decorator_filters,
+									self::DECORATE_TYPE_TEST);
 							}
 
-							return $decorator !== null ? self::__decorate(0, $decorator, self::DECORATE_TYPE_TEST) : 0;
+							return $decorator !== null ? self::__decorate(0, $decorator, $decorator_filters,
+								self::DECORATE_TYPE_TEST) : 0;
 						}
 						break;
 
@@ -867,18 +880,18 @@ class Engine
 						{
 							return self::__decorate(self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($q,
 								isset($args[0]) ? $args[0] : null, self::QUERY_TYPE_AFFECTED), $decorator,
-								self::DECORATE_TYPE_TEST);
+								$decorator_filters,	self::DECORATE_TYPE_TEST);
 						}
 						break;
 
 					case 'error': // error check
 						return self::__decorate(self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->isError(),
-							$decorator, self::DECORATE_TYPE_TEST);
+							$decorator, $decorator_filters, self::DECORATE_TYPE_TEST);
 						break;
 
 					case 'error_last': // get last error
 						return self::__decorate(self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->getError(),
-							$decorator, self::DECORATE_TYPE_STRING);
+							$decorator, $decorator_filters, self::DECORATE_TYPE_STRING);
 						break;
 
 					case 'exists': // check if record(s) exists
@@ -897,18 +910,19 @@ class Engine
 							if(isset($r[0]))
 							{
 								$r = (array)$r[0];
-								return self::__decorate((int)$r['is_set'] > 0, $decorator, self::DECORATE_TYPE_TEST);
+								return self::__decorate((int)$r['is_set'] > 0, $decorator, $decorator_filters,
+									self::DECORATE_TYPE_TEST);
 							}
 
-							return $decorator !== null ? self::__decorate(false, $decorator, self::DECORATE_TYPE_TEST)
-								: false;
+							return $decorator !== null ? self::__decorate(false, $decorator, $decorator_filters,
+								self::DECORATE_TYPE_TEST) : false;
 						}
 						break;
 
 					case 'id': // get last insert ID
 						return self::__decorate(
 							self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->__getPdo()->lastInsertId(),
-								$decorator, self::DECORATE_TYPE_TEST);
+								$decorator, $decorator_filters, self::DECORATE_TYPE_TEST);
 						break;
 
 					case 'key': // table primary key column name getter/setter
@@ -979,7 +993,8 @@ class Engine
 						{
 							return self::__decorate(
 								self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($q, $params,
-									self::QUERY_TYPE_AFFECTED), $decorator, self::DECORATE_TYPE_TEST);
+									self::QUERY_TYPE_AFFECTED), $decorator, $decorator_filters,
+									self::DECORATE_TYPE_TEST);
 						}
 						break;
 
@@ -1016,7 +1031,8 @@ class Engine
 
 						return self::__decorate(
 							self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($cmd[self::KEY_CMD_SQL],
-								isset($args[0]) ? $args[0] : null), $decorator, self::DECORATE_TYPE_DETECT);
+								isset($args[0]) ? $args[0] : null), $decorator, $decorator_filters,
+								self::DECORATE_TYPE_DETECT);
 						break;
 
 					case 'rollback': // rollback transaction
