@@ -510,8 +510,8 @@ if($r['pagination']->prev > 0)
 	$pages = array_slice(range(1, $r['pagination']->prev), -5);
 }
 ```
-Pagination can also use [decorators](https://github.com/shayanderson/xap#decorators-with-pagination).
-> Pagination only works on select commands like `users(id, fullname)/pagination` and will *not* work on other commands like `:query/pagination SELECT id, fullname FROM users`
+**Note:** Pagination can also use [decorators](https://github.com/shayanderson/xap#decorators-with-pagination).
+> Pagination only works on select commands like `users(id, fullname)/pagination` and queries like `:query/pagination SELECT id, fullname FROM users`
 
 ### Data Modeling
 Data Modeling (or ORM) can be used in Xap. First, ensure the `\Xap\Model` class is included in the `xap.bootstrap.php` file:

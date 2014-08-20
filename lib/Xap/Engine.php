@@ -337,6 +337,77 @@ class Engine
 	}
 
 	/**
+	 * Prepare recordset and pagination controls
+	 *
+	 * @param array $data
+	 * @param array $paging (pagination controls)
+	 * @return void
+	 */
+	private static function __paginationPrepData(&$data, &$paging)
+	{
+		if(count($data) > $paging[self::KEY_PAGE_RPP])
+		{
+			array_pop($data); // rm last row (more rows)
+			$paging[self::KEY_PAGE_NEXT] = $paging[self::KEY_PAGE_PAGE] + 1;
+		}
+
+		if($paging[self::KEY_PAGE_PAGE] > 1)
+		{
+			$paging[self::KEY_PAGE_PREV] = $paging[self::KEY_PAGE_PAGE] - 1;
+		}
+
+		if($paging[self::KEY_PAGE_NEXT_STR] !== null && $paging[self::KEY_PAGE_NEXT] > 0) // next decorator
+		{
+			$paging[self::KEY_PAGE_NEXT_STR] = str_replace('{$next}', $paging[self::KEY_PAGE_NEXT],
+				$paging[self::KEY_PAGE_NEXT_STR]);
+		}
+		else
+		{
+			$paging[self::KEY_PAGE_NEXT_STR] = '';
+		}
+
+		if($paging[self::KEY_PAGE_PREV_STR] !== null && $paging[self::KEY_PAGE_PREV] > 0) // prev decorator
+		{
+			$paging[self::KEY_PAGE_PREV_STR] = str_replace('{$prev}', $paging[self::KEY_PAGE_PREV],
+				$paging[self::KEY_PAGE_PREV_STR]);
+		}
+		else
+		{
+			$paging[self::KEY_PAGE_PREV_STR] = '';
+		}
+	}
+
+	/**
+	 * Prepare query and pagination controls
+	 *
+	 * @param string $query
+	 * @param array $pagination
+	 * @return array
+	 * @throws \Exception (when LIMIT clause already in query)
+	 */
+	private static function __paginationPrepQuery(&$query, &$pagination)
+	{
+		if(!preg_match('/LIMIT[\s]+[\d,]+(OFFSET[\s]+[\d]+)?/i', $query))
+		{
+			$p = [self::KEY_PAGE_RPP => $pagination[self::KEY_PAGE_RPP], self::KEY_PAGE_PAGE =>
+				$pagination[self::KEY_PAGE_PAGE], self::KEY_PAGE_NEXT => 0, self::KEY_PAGE_PREV => 0,
+				self::KEY_PAGE_OFFSET => 0,
+				self::KEY_PAGE_NEXT_STR => $pagination[self::KEY_PAGE_NEXT_STR],
+				self::KEY_PAGE_PREV_STR => $pagination[self::KEY_PAGE_PREV_STR]];
+			$p[self::KEY_PAGE_OFFSET] = ($p[self::KEY_PAGE_PAGE] - 1) * $p[self::KEY_PAGE_RPP];
+			$query = rtrim(trim($query), ';') . ' LIMIT ' . $p[self::KEY_PAGE_OFFSET] . ', '
+				. ($p[self::KEY_PAGE_RPP] + 1);
+
+			return $p;
+		}
+		else // LIMIT already exists
+		{
+			throw new \Exception('Failed to apply pagination to query,'
+				. ' LIMIT clause already exists in query');
+		}
+	}
+
+	/**
 	 * Parse command
 	 *
 	 * @param string $cmd
@@ -545,7 +616,7 @@ class Engine
 	 * @staticvar array $pagination
 	 * @param array $args
 	 * @return mixed
-	 * @throws \Exception
+	 * @throws \Exception (on command error)
 	 */
 	public static function exec(array $args)
 	{
@@ -585,23 +656,7 @@ class Engine
 
 				if($options & self::OPT_PAGINATION) // add pagination
 				{
-					// match 'LIMIT x, y (OFFSET z)?', only allow if no LIMIT
-					if(!preg_match('/LIMIT[\s]+[\d,]+(OFFSET[\s]+[\d]+)?/i', $q))
-					{
-						$p = [self::KEY_PAGE_RPP => $pagination[self::KEY_PAGE_RPP], self::KEY_PAGE_PAGE =>
-							$pagination[self::KEY_PAGE_PAGE], self::KEY_PAGE_NEXT => 0, self::KEY_PAGE_PREV => 0,
-							self::KEY_PAGE_OFFSET => 0,
-							self::KEY_PAGE_NEXT_STR => $pagination[self::KEY_PAGE_NEXT_STR],
-							self::KEY_PAGE_PREV_STR => $pagination[self::KEY_PAGE_PREV_STR]];
-						$p[self::KEY_PAGE_OFFSET] = ($p[self::KEY_PAGE_PAGE] - 1) * $p[self::KEY_PAGE_RPP];
-						$q = rtrim(trim($q), ';') . ' LIMIT ' . $p[self::KEY_PAGE_OFFSET] . ', '
-							. ($p[self::KEY_PAGE_RPP] + 1);
-					}
-					else // LIMIT already exists
-					{
-						throw new \Exception('Failed to apply pagination to query,'
-							. ' LIMIT clause already exists in query');
-					}
+					$p = self::__paginationPrepQuery($q, $pagination);
 				}
 
 				if(isset($args[0]) && is_array($args[0])) // query params
@@ -648,36 +703,7 @@ class Engine
 				{
 					$r = self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($q, $params, self::QUERY_TYPE_ROWS);
 
-					if(count($r) > $p[self::KEY_PAGE_RPP])
-					{
-						array_pop($r); // rm last row (more rows)
-						$p[self::KEY_PAGE_NEXT] = $p[self::KEY_PAGE_PAGE] + 1;
-					}
-
-					if($p[self::KEY_PAGE_PAGE] > 1)
-					{
-						$p[self::KEY_PAGE_PREV] = $p[self::KEY_PAGE_PAGE] - 1;
-					}
-
-					if($p[self::KEY_PAGE_NEXT_STR] !== null && $p[self::KEY_PAGE_NEXT] > 0) // next decorator
-					{
-						$p[self::KEY_PAGE_NEXT_STR] = str_replace('{$next}', $p[self::KEY_PAGE_NEXT],
-							$p[self::KEY_PAGE_NEXT_STR]);
-					}
-					else
-					{
-						$p[self::KEY_PAGE_NEXT_STR] = '';
-					}
-
-					if($p[self::KEY_PAGE_PREV_STR] !== null && $p[self::KEY_PAGE_PREV] > 0) // prev decorator
-					{
-						$p[self::KEY_PAGE_PREV_STR] = str_replace('{$prev}', $p[self::KEY_PAGE_PREV],
-							$p[self::KEY_PAGE_PREV_STR]);
-					}
-					else
-					{
-						$p[self::KEY_PAGE_PREV_STR] = '';
-					}
+					self::__paginationPrepData($r, $p);
 
 					return ['pagination' =>
 						self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->conf(self::KEY_CONF_OBJECTS)
@@ -1029,10 +1055,39 @@ class Engine
 							return $cmd[self::KEY_CMD_SQL];
 						}
 
-						return self::__decorate(
-							self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($cmd[self::KEY_CMD_SQL],
-								isset($args[0]) ? $args[0] : null), $decorator, $decorator_filters,
-								self::DECORATE_TYPE_DETECT);
+						if($options & self::OPT_PAGINATION) // apply pagination
+						{
+							if(preg_match('/^\s*select/i', $cmd[self::KEY_CMD_SQL]))
+							{
+								$p = self::__paginationPrepQuery($cmd[self::KEY_CMD_SQL], $pagination);
+							}
+							else
+							{
+								throw new \Exception('Failed to apply pagination to query,'
+									. ' query must being with SELECT keyword');
+							}
+						}
+
+						if(isset($p)) // preg pagination data
+						{
+							$r = self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($cmd[self::KEY_CMD_SQL],
+								isset($args[0]) ? $args[0] : null, self::QUERY_TYPE_ROWS);
+
+							self::__paginationPrepData($r, $p);
+
+							return ['pagination' =>
+								self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->conf(self::KEY_CONF_OBJECTS)
+								? (object)$p : $p, 'rows' => self::__decorate($r, $decorator, $decorator_filters,
+									self::DECORATE_TYPE_ARRAY)];
+						}
+						else // execute query
+						{
+							return self::__decorate(
+								self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($cmd[self::KEY_CMD_SQL],
+									isset($args[0]) ? $args[0] : null), $decorator, $decorator_filters,
+									self::DECORATE_TYPE_DETECT);
+						}
+
 						break;
 
 					case 'rollback': // rollback transaction
