@@ -12,6 +12,9 @@ require_once './lib/Xap/Model.php';
 // import Xap Decorate class (if using decorators)
 require_once './lib/Xap/Decorate.php';
 
+// import Xap Cache class (if using '/cache' query option for caching)
+require_once './lib/Xap/Cache.php';
+
 // import xap() function
 require_once './lib/Xap/xap.php';
 
@@ -33,3 +36,7 @@ xap([
 
 // set global pagination records per page (default 10)
 // xap(':pagination', ['rpp' => 10]);
+
+// set global cache settings
+// \Xap\Cache::setExpireGlobal('10 seconds'); // global cache expire time (default '30 seconds')
+// \Xap\Cache::setPath('/var/www/app/cache'); // global cache directory path

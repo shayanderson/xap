@@ -3,7 +3,7 @@
  * Xap - MySQL Rapid Development Engine for PHP 5.5.0+
  *
  * @package Xap
- * @version 0.0.4
+ * @version 0.0.5
  * @copyright 2014 Shay Anderson <http://www.shayanderson.com>
  * @license MIT License <http://www.opensource.org/licenses/mit-license.php>
  * @link <https://github.com/shayanderson/xap>
@@ -79,10 +79,11 @@ class Engine
 	 * Query options
 	 */
 	const
-		OPT_FIRST = 0x1,
-		OPT_MODEL = 0x2,
-		OPT_PAGINATION = 0x4,
-		OPT_QUERY = 0x8;
+		OPT_CACHE = 0x1,
+		OPT_FIRST = 0x2,
+		OPT_MODEL = 0x4,
+		OPT_PAGINATION = 0x8,
+		OPT_QUERY = 0x10;
 
 	/**
 	 * Forced query types
@@ -560,6 +561,7 @@ class Engine
 	private static function &__setOptions(&$cmd)
 	{
 		static $map = [
+			'CACHE' => self::OPT_CACHE,
 			'FIRST' => self::OPT_FIRST,
 			'MODEL' => self::OPT_MODEL,
 			'PAGINATION' => self::OPT_PAGINATION,
@@ -668,7 +670,7 @@ class Engine
 				{
 					return $q;
 				}
-				// /model option return first record as model object (but not when using table.[id])
+				// option /model return first record as model object (but not when using table.[id])
 				else if($options & self::OPT_MODEL && !isset($cmd[self::KEY_CMD_ID]))
 				{
 					// LIMIT clause cannot exist in query SQL for model object
@@ -701,7 +703,8 @@ class Engine
 				}
 				else if(isset($p)) // exec query with pagination
 				{
-					$r = self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($q, $params, self::QUERY_TYPE_ROWS);
+					$r = self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($q, $params, self::QUERY_TYPE_ROWS,
+						$options & self::OPT_CACHE);
 
 					self::__paginationPrepData($r, $p);
 
@@ -721,7 +724,7 @@ class Engine
 						}
 
 						$r = self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($q, $params,
-							self::QUERY_TYPE_ROWS);
+							self::QUERY_TYPE_ROWS, $options & self::OPT_CACHE);
 
 						if(isset($r[0]))
 						{
@@ -733,7 +736,8 @@ class Engine
 					else
 					{
 						return self::__decorate(self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($q, $params,
-							self::QUERY_TYPE_ROWS), $decorator, $decorator_filters, self::DECORATE_TYPE_ARRAY);
+							self::QUERY_TYPE_ROWS, $options & self::OPT_CACHE), $decorator, $decorator_filters,
+							self::DECORATE_TYPE_ARRAY);
 					}
 				}
 			}
@@ -1071,7 +1075,7 @@ class Engine
 						if(isset($p)) // preg pagination data
 						{
 							$r = self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($cmd[self::KEY_CMD_SQL],
-								isset($args[0]) ? $args[0] : null, self::QUERY_TYPE_ROWS);
+								isset($args[0]) ? $args[0] : null, self::QUERY_TYPE_ROWS, $options & self::OPT_CACHE);
 
 							self::__paginationPrepData($r, $p);
 
@@ -1084,8 +1088,8 @@ class Engine
 						{
 							return self::__decorate(
 								self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($cmd[self::KEY_CMD_SQL],
-									isset($args[0]) ? $args[0] : null), $decorator, $decorator_filters,
-									self::DECORATE_TYPE_DETECT);
+									isset($args[0]) ? $args[0] : null, 0, $options & self::OPT_CACHE), $decorator,
+									$decorator_filters,	self::DECORATE_TYPE_DETECT);
 						}
 
 						break;
@@ -1194,9 +1198,10 @@ class Engine
 	 * @param string $query
 	 * @param array $params (prepared statement params)
 	 * @param int $force_query_type
+	 * @param boolean $use_cache
 	 * @return mixed (array|boolean|int)
 	 */
-	public function query($query, $params = null, $force_query_type = 0)
+	public function query($query, $params = null, $force_query_type = 0, $use_cache = false)
 	{
 		$this->__log('Query: ' . $query);
 		if(is_array($params) && !empty($params))
@@ -1218,6 +1223,17 @@ class Engine
 
 		try
 		{
+			if($use_cache) // cache
+			{
+				$cache_key = Cache::getKey($this->__id, $query, $params);
+
+				if(Cache::has($cache_key)) // is cached
+				{
+					$this->__log('Cache read: ' . $cache_key);
+					return Cache::read($cache_key);
+				}
+			}
+
 			if($this->__getPdo()) // verify valid connection (suppress error)
 			{
 				$sh = $this->__getPdo()->prepare($query);
@@ -1226,7 +1242,17 @@ class Engine
 					if($force_query_type === self::QUERY_TYPE_ROWS
 						|| preg_match('/^\s*(select|show|describe|optimize|pragma|repair)/i', $query)) // fetch
 					{
-						return $sh->fetchAll( $this->conf(self::KEY_CONF_OBJECTS) ? \PDO::FETCH_CLASS : \PDO::FETCH_ASSOC );
+						if(isset($cache_key)) // write/return cache
+						{
+							$this->__log('Cache write: ' . $cache_key);
+							return Cache::write($cache_key, $sh->fetchAll( $this->conf(self::KEY_CONF_OBJECTS)
+								? \PDO::FETCH_CLASS : \PDO::FETCH_ASSOC ));
+						}
+						else // no cache
+						{
+							return $sh->fetchAll( $this->conf(self::KEY_CONF_OBJECTS)
+								? \PDO::FETCH_CLASS : \PDO::FETCH_ASSOC );
+						}
 					}
 					else if($force_query_type === self::QUERY_TYPE_AFFECTED
 						|| preg_match('/^\s*(delete|insert|update)/i', $query)) // affected
