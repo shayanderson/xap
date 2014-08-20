@@ -1,6 +1,6 @@
 <?php
 /**
- * Xap - MySQL Rapid Development Engine for PHP 5.5.0+
+ * Xap - MySQL Rapid Development Engine for PHP 5.5+
  *
  * @package Xap
  * @version 0.0.5

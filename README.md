@@ -1,5 +1,5 @@
 # Xap
-#### MySQL Rapid Development Engine for PHP 5.5.0+
+#### MySQL Rapid Development Engine for PHP 5.5+
 Xap requirements:
 
 1. PHP 5.5.0+
