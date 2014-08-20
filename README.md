@@ -37,7 +37,7 @@ Here is a list of Xap commands:
 - [`transaction`](https://github.com/shayanderson/xap#transactions) - start transaction
 - [`truncate`](https://github.com/shayanderson/xap#truncate-table) - truncate table
 
-Xap also supports:
+Xap supports:
 
 - [Custom primary key name](https://github.com/shayanderson/xap#custom-table-primary-key-column-name)
 - [Custom log handler](https://github.com/shayanderson/xap#custom-log-handler)
