@@ -762,6 +762,7 @@ echo $user; // display decorated data
 This example would display something like:
 ```html
 14 - Mike Smith - Yes
+```
 
 ### Caching
 Caching can be used to reduce database calls. First, ensure the `\Xap\Decorate` class is included in the `xap.bootstrap.php` file and the cache settings are set:
