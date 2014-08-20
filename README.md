@@ -795,7 +795,7 @@ A custom expire time is only used for a single query, for example:
 \Xap\Cache::setExpire('1 hour'); // refresh cache every hour
 $items = xap('items(title, sku, is_active)/cache LIMIT 10');
 // $items_inactive cache expires in the global expire time and not in 1 hour
-$items_inactive = xap('items(title, sku, is_active)/cache WHERE is_active = 0 LIMIT 10');
+$items_inactive = xap('items(title, sku)/cache WHERE is_active = 0 LIMIT 10');
 ```
 > Caching can be used for all different types of select commands and queries, but cannot be used with the `/model` option
 
