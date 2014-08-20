@@ -778,7 +778,7 @@ require_once './lib/Xap/Cache.php';
 
 Here is a simple example of caching using a select query and the `/cache` option:
 ```php
-// SELECT fullname, email, is_active FROM users LIMIT 10
+// SELECT title, sku, is_active FROM items LIMIT 10
 $items = xap('items(title, sku, is_active)/cache LIMIT 10');
 ```
 Now the recordset has been cached and will expire in 10 seconds. When the cache expires it will be rewritten with current data.
