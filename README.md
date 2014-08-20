@@ -779,23 +779,23 @@ require_once './lib/Xap/Cache.php';
 Here is a simple example of caching using a select query and the `/cache` option:
 ```php
 // SELECT fullname, email, is_active FROM users LIMIT 10
-$users = xap('users(fullname, email, is_active)/cache LIMIT 10');
+$items = xap('items(title, sku, is_active)/cache LIMIT 10');
 ```
 Now the recordset has been cached and will expire in 10 seconds. When the cache expires it will be rewritten with current data.
 
 To use a custom expire time for a single query (and *not* the global cache expire time) use:
 ```php
 \Xap\Cache::setExpire('1 hour'); // refresh cache every hour
-$users = xap('users(fullname, email, is_active)/cache LIMIT 10');
+$items = xap('items(title, sku, is_active)/cache LIMIT 10');
 ```
 Now the recordset will expire every 1 hour.
 
 A custom expire time is only used for a single query, for example:
 ```php
 \Xap\Cache::setExpire('1 hour'); // refresh cache every hour
-$users = xap('users(fullname, email, is_active)/cache LIMIT 10');
-// $users2 cache expires in the global expire time and not in 1 hour
-$users2 = xap('users(fullname, email, is_active)/cache LIMIT 10');
+$items = xap('items(title, sku, is_active)/cache LIMIT 10');
+// $items_inactive cache expires in the global expire time and not in 1 hour
+$items_inactive = xap('items(title, sku, is_active)/cache WHERE is_active = 0 LIMIT 10');
 ```
 > Caching can be used for all different types of select commands and queries, but cannot be used with the `/model` option
 
