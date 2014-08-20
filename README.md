@@ -790,7 +790,7 @@ $items = xap('items(title, sku, is_active)/cache LIMIT 10');
 ```
 Now the recordset will expire every 1 hour.
 
-A custom expire time is only used for a single query, for example:
+A custom expire time is only used for a *single query*, for example:
 ```php
 \Xap\Cache::setExpire('1 hour'); // refresh cache every hour
 $items = xap('items(title, sku, is_active)/cache LIMIT 10');
