@@ -774,6 +774,9 @@ require_once './lib/Xap/Cache.php';
 // set global cache directory path for cache writes
 \Xap\Cache::setPath('/var/www/app/cache');
 ```
+> **Security Warning**
+Do *not* use caching to store private data that should be stored in a secure database. Also, the global cache directory path should be protected from public (external) requests.
+
 Here is a simple example of caching using a select query and the `/cache` option:
 ```php
 // SELECT fullname, email, is_active FROM users LIMIT 10
