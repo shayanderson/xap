@@ -765,7 +765,7 @@ This example would display something like:
 ```
 
 ### Caching
-Caching can be used to reduce database calls. First, ensure the `\Xap\Decorate` class is included in the `xap.bootstrap.php` file and the cache settings are set:
+Caching can be used to reduce database calls. First, ensure the `\Xap\Cache` class is included in the `xap.bootstrap.php` file and the cache settings are set:
 ```php
 require_once './lib/Xap/Decorate.php';
 ...
