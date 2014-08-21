@@ -831,6 +831,13 @@ class Engine
 						}
 						break;
 
+					case 'cache': // set single cache expire time
+						if(!empty($cmd[self::KEY_CMD_SQL]))
+						{
+							Cache::setExpire($cmd[self::KEY_CMD_SQL]);
+						}
+						break;
+
 					case 'columns': // show table columns
 						$q = 'SHOW COLUMNS FROM ' . $cmd[self::KEY_CMD_TABLE];
 

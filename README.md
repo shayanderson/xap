@@ -17,6 +17,7 @@ Here is a list of Xap commands:
 
 - [`add`](https://github.com/shayanderson/xap#insert) - insert record (can also use `insert`)
 - [`call`](https://github.com/shayanderson/xap#call-stored-procedurefunction-routines) - call stored procedure or function (and [`call_affected`](https://github.com/shayanderson/xap#call-stored-procedurefunction-routines) and [`call_rows`](https://github.com/shayanderson/xap#call-stored-procedurefunction-routines))
+- [`cache`](https://github.com/shayanderson/xap#caching) - set single cache expire time
 - [`columns`](https://github.com/shayanderson/xap#show-table-columns) - show table columns
 - [`commit`](https://github.com/shayanderson/xap#transactions) - commit transaction
 - [`count`](https://github.com/shayanderson/xap#count-query) - count table records
@@ -785,14 +786,14 @@ Now the recordset has been cached and will expire in 10 seconds. When the cache 
 
 To use a custom expire time for a single query (and *not* the global cache expire time) use:
 ```php
-\Xap\Cache::setExpire('1 hour'); // refresh cache every hour
+xap(':cache 1 hour'); // refresh cache every hour
 $items = xap('items(title, sku, is_active)/cache LIMIT 10');
 ```
 Now the recordset will expire every 1 hour.
 
 A custom expire time is only used for a *single query*, for example:
 ```php
-\Xap\Cache::setExpire('1 hour'); // refresh cache every hour
+xap(':cache 1 hour'); // refresh cache every hour
 $items = xap('items(title, sku, is_active)/cache LIMIT 10');
 // $items_inactive cache expires in the global expire time and not in 1 hour
 $items_inactive = xap('items(title, sku)/cache WHERE is_active = 0 LIMIT 10');
