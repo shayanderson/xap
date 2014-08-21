@@ -782,7 +782,7 @@ Here is a simple example of caching using a select query and the `/cache` option
 // SELECT title, sku, is_active FROM items LIMIT 10
 $items = xap('items(title, sku, is_active)/cache LIMIT 10');
 ```
-Now the recordset has been cached and will expire in 10 seconds. When the cache expires it will be rewritten with current data.
+Now the recordset has been cached and will expire in 10 seconds (the global expire time). When the cache expires it will be rewritten with current data.
 
 To use a custom expire time for a single query (and *not* the global cache expire time) use:
 ```php
