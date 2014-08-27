@@ -243,6 +243,10 @@ $r = xap(':query SELECT * FROM users LIMIT 2');
 // use params with manual query:
 $r = xap(':query SELECT * FROM users WHERE user_id = ?', [2]);
 ```
+> The query command can use these query options: [/query](https://github.com/shayanderson/xap#query-option), [/first](https://github.com/shayanderson/xap#first-option), [/pagination](https://github.com/shayanderson/xap#pagination), [/cache](https://github.com/shayanderson/xap#caching). For example:
+```php
+$query_string = $r = xap(':query/query SELECT * FROM users LIMIT 2');
+```
 
 #### Count Query
 Get back a count (integer) query example:

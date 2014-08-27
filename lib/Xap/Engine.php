@@ -1093,10 +1093,31 @@ class Engine
 						}
 						else // execute query
 						{
-							return self::__decorate(
-								self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($cmd[self::KEY_CMD_SQL],
-									isset($args[0]) ? $args[0] : null, 0, $options & self::OPT_CACHE), $decorator,
-									$decorator_filters,	self::DECORATE_TYPE_DETECT);
+							if($options & self::OPT_FIRST) // first record only
+							{
+								if(!preg_match('/LIMIT[\s]+[\d]+/i', $cmd[self::KEY_CMD_SQL]))
+								{
+									$cmd[self::KEY_CMD_SQL] = rtrim(rtrim($cmd[self::KEY_CMD_SQL]), ';') . ' LIMIT 1';
+								}
+
+								$r = self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($cmd[self::KEY_CMD_SQL],
+										isset($args[0]) ? $args[0] : null, 0, $options & self::OPT_CACHE);
+
+								if(isset($r[0]))
+								{
+									return self::__decorate($r[0], $decorator, $decorator_filters,
+										self::DECORATE_TYPE_ARRAY);
+								}
+
+								return $decorator !== null ? '' : null; // no record
+							}
+							else // all records
+							{
+								return self::__decorate(
+									self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($cmd[self::KEY_CMD_SQL],
+										isset($args[0]) ? $args[0] : null, 0, $options & self::OPT_CACHE), $decorator,
+										$decorator_filters,	self::DECORATE_TYPE_DETECT);
+							}
 						}
 
 						break;
