@@ -144,7 +144,7 @@ class Cache
 	 */
 	public static function read($key)
 	{
-		return @unserialize(file_get_contents(self::$__path . $key));
+		return @unserialize(base64_decode(file_get_contents(self::$__path . $key)));
 	}
 
 	/**
@@ -191,7 +191,7 @@ class Cache
 	 */
 	public static function &write($key, $data)
 	{
-		if(file_put_contents(self::$__path . $key, serialize($data), LOCK_EX) === false)
+		if(file_put_contents(self::$__path . $key, base64_encode(serialize($data)), LOCK_EX) === false)
 		{
 			throw new \Exception('Failed to write cache file \'' . self::$__path . $key . '\'');
 		}
