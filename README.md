@@ -447,7 +447,7 @@ The `array` option can be used to force return type of arrays instead of objects
 ```php
 $r = xap('users(fullname)/distinct/array LIMIT 5');
 ```
-Now the <i>$r</i> variable is an array with arrays instead of an array with objects (if using objects for connection in configuration settings).
+Now the `$r` variable is an array with arrays instead of an array with objects (if using objects for connection in configuration settings).
 
 ##### Query Option
 The `query` option can be used to return the query string only, without executing the query (for debugging), for example:
