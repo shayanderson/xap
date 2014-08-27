@@ -79,11 +79,12 @@ class Engine
 	 * Query options
 	 */
 	const
-		OPT_CACHE = 0x1,
-		OPT_FIRST = 0x2,
-		OPT_MODEL = 0x4,
-		OPT_PAGINATION = 0x8,
-		OPT_QUERY = 0x10;
+		OPT_ARRAY = 0x1,
+		OPT_CACHE = 0x2,
+		OPT_FIRST = 0x4,
+		OPT_MODEL = 0x8,
+		OPT_PAGINATION = 0x10,
+		OPT_QUERY = 0x20;
 
 	/**
 	 * Forced query types
@@ -561,6 +562,7 @@ class Engine
 	private static function &__setOptions(&$cmd)
 	{
 		static $map = [
+			'ARRAY' => self::OPT_ARRAY,
 			'CACHE' => self::OPT_CACHE,
 			'FIRST' => self::OPT_FIRST,
 			'MODEL' => self::OPT_MODEL,
@@ -704,7 +706,7 @@ class Engine
 				else if(isset($p)) // exec query with pagination
 				{
 					$r = self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($q, $params, self::QUERY_TYPE_ROWS,
-						$options & self::OPT_CACHE);
+						$options & self::OPT_CACHE, $options & self::OPT_ARRAY);
 
 					self::__paginationPrepData($r, $p);
 
@@ -724,7 +726,7 @@ class Engine
 						}
 
 						$r = self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($q, $params,
-							self::QUERY_TYPE_ROWS, $options & self::OPT_CACHE);
+							self::QUERY_TYPE_ROWS, $options & self::OPT_CACHE, $options & self::OPT_ARRAY);
 
 						if(isset($r[0]))
 						{
@@ -736,8 +738,8 @@ class Engine
 					else
 					{
 						return self::__decorate(self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($q, $params,
-							self::QUERY_TYPE_ROWS, $options & self::OPT_CACHE), $decorator, $decorator_filters,
-							self::DECORATE_TYPE_ARRAY);
+							self::QUERY_TYPE_ROWS, $options & self::OPT_CACHE, $options & self::OPT_ARRAY),
+							$decorator, $decorator_filters,	self::DECORATE_TYPE_ARRAY);
 					}
 				}
 			}
@@ -1082,7 +1084,8 @@ class Engine
 						if(isset($p)) // preg pagination data
 						{
 							$r = self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($cmd[self::KEY_CMD_SQL],
-								isset($args[0]) ? $args[0] : null, self::QUERY_TYPE_ROWS, $options & self::OPT_CACHE);
+								isset($args[0]) ? $args[0] : null, self::QUERY_TYPE_ROWS, $options & self::OPT_CACHE,
+								$options & self::OPT_ARRAY);
 
 							self::__paginationPrepData($r, $p);
 
@@ -1101,7 +1104,8 @@ class Engine
 								}
 
 								$r = self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($cmd[self::KEY_CMD_SQL],
-										isset($args[0]) ? $args[0] : null, 0, $options & self::OPT_CACHE);
+										isset($args[0]) ? $args[0] : null, 0, $options & self::OPT_CACHE,
+										$options & self::OPT_ARRAY);
 
 								if(isset($r[0]))
 								{
@@ -1115,8 +1119,9 @@ class Engine
 							{
 								return self::__decorate(
 									self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($cmd[self::KEY_CMD_SQL],
-										isset($args[0]) ? $args[0] : null, 0, $options & self::OPT_CACHE), $decorator,
-										$decorator_filters,	self::DECORATE_TYPE_DETECT);
+										isset($args[0]) ? $args[0] : null, 0, $options & self::OPT_CACHE,
+										$options & self::OPT_ARRAY), $decorator, $decorator_filters,
+										self::DECORATE_TYPE_DETECT);
 							}
 						}
 
@@ -1227,9 +1232,10 @@ class Engine
 	 * @param array $params (prepared statement params)
 	 * @param int $force_query_type
 	 * @param boolean $use_cache
+	 * @param boolean $force_array
 	 * @return mixed (array|boolean|int)
 	 */
-	public function query($query, $params = null, $force_query_type = 0, $use_cache = false)
+	public function query($query, $params = null, $force_query_type = 0, $use_cache = false, $force_array = false)
 	{
 		$this->__log('Query: ' . $query);
 		if(is_array($params) && !empty($params))
@@ -1274,11 +1280,11 @@ class Engine
 						{
 							$this->__log('Cache write: ' . $cache_key);
 							return Cache::write($cache_key, $sh->fetchAll( $this->conf(self::KEY_CONF_OBJECTS)
-								? \PDO::FETCH_CLASS : \PDO::FETCH_ASSOC ));
+								&& !$force_array ? \PDO::FETCH_CLASS : \PDO::FETCH_ASSOC ));
 						}
 						else // no cache
 						{
-							return $sh->fetchAll( $this->conf(self::KEY_CONF_OBJECTS)
+							return $sh->fetchAll( $this->conf(self::KEY_CONF_OBJECTS) && !$force_array
 								? \PDO::FETCH_CLASS : \PDO::FETCH_ASSOC );
 						}
 					}

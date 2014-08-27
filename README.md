@@ -442,6 +442,13 @@ $affected_rows = xap('users:mod/low_priority/ignore WHERE user_id = :user_id',
 	['fullname' => 'Shay Anderson'], ['user_id' => 2]);
 ```
 
+##### Array Option
+The `array` option can be used to force return type of arrays instead of objects when using objects in configuration settings:
+```php
+$r = xap('users(fullname)/distinct/array LIMIT 5');
+```
+Now the <i>$r</i> variable is an array with arrays instead of an array with objects (if using objects for connection in configuration settings).
+
 ##### Query Option
 The `query` option can be used to return the query string only, without executing the query (for debugging), for example:
 ```php
