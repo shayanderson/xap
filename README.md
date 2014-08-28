@@ -81,7 +81,7 @@ catch(\Exception $ex)
 	// warn here
 }
 ```
-Or if errors of turned off example:
+Or if errors are turned off example:
 ```php
 $user = xap('users.14'); // same as "SELECT * FROM users WHERE id = '14'"
 if(!xap(':error'))
