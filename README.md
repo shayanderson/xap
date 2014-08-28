@@ -81,6 +81,18 @@ catch(\Exception $ex)
 	// warn here
 }
 ```
+Or if errors of turned off example:
+```php
+$user = xap('users.14'); // same as "SELECT * FROM users WHERE id = '14'"
+if(!xap(':error'))
+{
+	if($user) echo $user->fullname; // print record field value
+}
+else
+{
+	echo xap(':error_last'); // print error
+}
+```
 
 ## Commands
 
