@@ -823,6 +823,13 @@ $items = xap('items(title, sku, is_active)/cache LIMIT 10');
 // $items_inactive cache expires in the global expire time and not in 1 hour
 $items_inactive = xap('items(title, sku)/cache WHERE is_active = 0 LIMIT 10');
 ```
+A custom cache key prefix can be used. This can be helpful when managing cache files with scripts. Here is an example:
+```php
+// set cache key prefix to 'item', cache key will be 'item-[cache key]'
+\Xap\Cache::setCacheKeyPrefix('item');
+// only this cache will use the 'item' cache key prefix
+$items = xap('items(title, sku, is_active)/cache LIMIT 10');
+```
 > Caching can be used for all different types of select commands and queries, but cannot be used with the `/model` option
 
 All cache files can be removed by using the command:

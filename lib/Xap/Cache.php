@@ -32,6 +32,13 @@ class Cache
 	private static $__expire_global = '-30 seconds';
 
 	/**
+	 * Cache key prefix
+	 *
+	 * @var string
+	 */
+	private static $__key_prefix;
+
+	/**
 	 * Cache directory path
 	 *
 	 * @var string
@@ -50,13 +57,14 @@ class Cache
 	}
 
 	/**
-	 * Reset expire time to global expire time
+	 * Reset expire time and cache key prefix
 	 *
 	 * @return void
 	 */
-	private static function __resetExpire()
+	private static function __reset()
 	{
 		self::$__expire = self::$__expire_global;
+		self::$__key_prefix = null;
 	}
 
 	/**
@@ -99,7 +107,8 @@ class Cache
 	 */
 	public static function getKey(&$connection_id, &$query, &$query_params)
 	{
-		return sha1($connection_id . $query . ( is_array($query_params) ? implode('', $query_params) : null ));
+		return ( self::$__key_prefix !== null ? self::$__key_prefix . '-' : '' )
+			. sha1($connection_id . $query . ( is_array($query_params) ? implode('', $query_params) : null ));
 	}
 
 	/**
@@ -124,15 +133,15 @@ class Cache
 		{
 			if(@filemtime(self::$__path . $key) < strtotime(self::$__expire)) // expire cache
 			{
-				self::__resetExpire();
+				self::__reset();
 				return false;
 			}
 
-			self::__resetExpire();
+			self::__reset();
 			return true;
 		}
 
-		self::__resetExpire();
+		self::__reset();
 		return false;
 	}
 
@@ -145,6 +154,17 @@ class Cache
 	public static function read($key)
 	{
 		return @unserialize(base64_decode(file_get_contents(self::$__path . $key)));
+	}
+
+	/**
+	 * Cache key prefix setter
+	 *
+	 * @param string $key_prefix (\w characters only, all others are stripped)
+	 * @return void
+	 */
+	public static function setCacheKeyPrefix($key_prefix)
+	{
+		self::$__key_prefix = preg_replace('/[^\w]+/', '', $key_prefix);
 	}
 
 	/**
@@ -167,7 +187,7 @@ class Cache
 	public static function setExpireGlobal($expire)
 	{
 		self::$__expire_global = self::__formatExpire($expire);
-		self::__resetExpire();
+		self::__reset();
 	}
 
 	/**
