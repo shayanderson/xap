@@ -808,6 +808,8 @@ $items = xap('items(title, sku, is_active)/cache LIMIT 10');
 ```
 Now the recordset has been cached and will expire in 10 seconds (the global expire time). When the cache expires it will be rewritten with current data.
 
+> Caching can be used for all different types of select commands and queries, but cannot be used with the `/model` option
+
 To use a custom expire time for a single query (and *not* the global cache expire time) use:
 ```php
 xap(':cache 1 hour'); // refresh cache every hour
@@ -830,7 +832,6 @@ A custom cache key prefix can be used. This can be helpful when managing cache f
 // only this cache will use the 'item' cache key prefix
 $items = xap('items(title, sku, is_active)/cache LIMIT 10');
 ```
-> Caching can be used for all different types of select commands and queries, but cannot be used with the `/model` option
 
 All cache files can be removed by using the command:
 ```php
