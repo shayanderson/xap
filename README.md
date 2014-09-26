@@ -830,8 +830,10 @@ A custom cache key prefix can be used. This can be helpful when managing cache f
 // set cache key prefix to 'item', cache key will be 'item-[cache key]'
 \Xap\Cache::setCacheKeyPrefix('item');
 // only this cache will use the 'item' cache key prefix
+// it must be set again for any other caches
 $items = xap('items(title, sku, is_active)/cache LIMIT 10');
 ```
+> Custom cache key prefixes should only include <i>\w</i> characters, all other characters will be removed
 
 All cache files can be removed by using the command:
 ```php
