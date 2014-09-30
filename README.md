@@ -2,7 +2,7 @@
 #### MySQL Rapid Development Engine for PHP 5.5+
 Xap requirements:
 
-1. PHP 5.5.0+
+1. PHP 5.5+
 2. PHP [PDO database extension](http://www.php.net/manual/en/book.pdo.php)
 3. Database table names cannot include characters `.`, `/`, `:` or ` ` (whitespace) and cannot start with `[`
 
@@ -720,11 +720,16 @@ Notice the `{$is_active:Yes?:No}` switch decorator. Now the output will be:
 Callable decorator filters can be used with decorators, for example:
 ```php
 echo xap('users LIMIT 3', '{$id} - {$fullname:upper} - {$is_active:Yes?:No}<br />',
-	['upper' => function($row) { return strtoupper($row['fullname']); }]);
+	['upper' => function($name) { return strtoupper($name); }]);
 ```
 Notice the `{$fullname:upper}` where `upper` is the filter name, and in the array of filters the key `upper` is used to denote the filter by name. Now the output will be:
 ```html
 1 - SHAY ANDERSON - Yes<br />2 - MIKE SMITH - Yes<br />3 - JOHN SMITH - No<br />
+```
+Or a callable filter can be used with the entire array (or row), for example the example above could be rewritten as:
+```php
+echo xap('users LIMIT 3', '{$id} - {$:upper} - {$is_active:Yes?:No}<br />',
+	['upper' => function($row) { return strtoupper($row['fullname']); }]);
 ```
 > When using decorate filters the array of callable filters must be passed to the Xap directly *after* the decorator string
 

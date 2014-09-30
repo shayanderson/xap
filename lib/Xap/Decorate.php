@@ -18,7 +18,7 @@ namespace Xap;
 class Decorate
 {
 	/**
-	 * Placeholder pattern for '{$var(:callable_filter|:TestYes?:TestNo)?}'
+	 * Placeholder pattern for '{$(var)?(:callable_filter|:TestYes?:TestNo)?}'
 	 */
 	const PATTERN_VAR_PLACEHOLDER = '/{\$([\w]+)?(?:\:([^}]+))?}/i';
 
@@ -44,23 +44,34 @@ class Decorate
 
 		preg_replace_callback(self::PATTERN_VAR_PLACEHOLDER, function($m) use(&$data, &$str, &$filters)
 		{
-			if(isset($m[1]) && (isset($data[$m[1]]) || array_key_exists($m[1], $data))
-				&& (is_scalar($data[$m[1]]) || $data[$m[1]] === null))
+			if(isset($m[1]) || array_key_exists(1, $m))
 			{
-				if(isset($m[2])) // callable filter or test value
+				if(empty($m[1])) // callable filter no key
 				{
-					if(strpos($m[2], self::PLACEHOLDER_TEST_VALUE_SEP) !== false) // test value
-					{
-						$str = str_replace($m[0], self::test($data[$m[1]], $m[2]), $str);
-					}
-					else if(isset($filters[$m[2]]) && is_callable($filters[$m[2]])) // apply callable filter
+					if(isset($filters[$m[2]]) && is_callable($filters[$m[2]]))
 					{
 						$str = str_replace($m[0], $filters[$m[2]]($data), $str);
 					}
 				}
-				else // no callable filter
+				else if((isset($data[$m[1]]) || array_key_exists($m[1], $data))
+					&& (is_scalar($data[$m[1]]) || $data[$m[1]] === null))
 				{
-					$str = str_replace($m[0], $data[$m[1]], $str);
+					if(isset($m[2])) // callable filter with key or test value
+					{
+						if(strpos($m[2], self::PLACEHOLDER_TEST_VALUE_SEP) !== false) // test value
+						{
+							$str = str_replace($m[0], self::test($data[$m[1]], $m[2]), $str);
+						}
+						// apply callable filter
+						else if(isset($filters[$m[2]]) && is_callable($filters[$m[2]]))
+						{
+							$str = str_replace($m[0], $filters[$m[2]]($data[$m[1]]), $str);
+						}
+					}
+					else // no callable filter
+					{
+						$str = str_replace($m[0], $data[$m[1]], $str);
+					}
 				}
 			}
 		}, $str);
