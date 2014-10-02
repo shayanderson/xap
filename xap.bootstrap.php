@@ -40,3 +40,4 @@ xap([
 // set global cache settings
 // \Xap\Cache::setExpireGlobal('10 seconds'); // global cache expire time (default '30 seconds')
 // \Xap\Cache::setPath('/var/www/app/cache'); // global cache directory path
+// \Xap\Cache::$use_compression = false; // globally turn off cache file compression (enabled by default)
