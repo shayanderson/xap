@@ -1304,7 +1304,7 @@ class Engine
 				}
 			}
 		}
-		catch(\PDOException $ex)
+		catch(\Exception $ex)
 		{
 			$this->__error($ex->getMessage());
 		}
