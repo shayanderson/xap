@@ -1263,7 +1263,7 @@ class Engine
 
 				if(Cache::has($cache_key)) // is cached
 				{
-					$this->__log('Cache read: ' . $cache_key);
+					$this->__log('(Cache read: ' . $cache_key . ')');
 					return Cache::read($cache_key);
 				}
 			}
@@ -1278,7 +1278,7 @@ class Engine
 					{
 						if(isset($cache_key)) // write/return cache
 						{
-							$this->__log('Cache write: ' . $cache_key);
+							$this->__log('(Cache write: ' . $cache_key . ')');
 							return Cache::write($cache_key, $sh->fetchAll( $this->conf(self::KEY_CONF_OBJECTS)
 								&& !$force_array ? \PDO::FETCH_CLASS : \PDO::FETCH_ASSOC ));
 						}
