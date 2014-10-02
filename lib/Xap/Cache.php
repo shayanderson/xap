@@ -46,6 +46,13 @@ class Cache
 	private static $__path;
 
 	/**
+	 * Use cache file compression (requires Zlib functions)
+	 *
+	 * @var boolean
+	 */
+	public static $use_compression = true;
+
+	/**
 	 * Format expire time
 	 *
 	 * @param mixed $expire (int ex: 20 (for 20 seconds), or string ex: '20 seconds')
@@ -153,7 +160,9 @@ class Cache
 	 */
 	public static function read($key)
 	{
-		return @unserialize(base64_decode(file_get_contents(self::$__path . $key)));
+		return (bool)self::$use_compression
+			? @unserialize(gzuncompress(base64_decode(file_get_contents(self::$__path . $key))))
+			: @unserialize(base64_decode(file_get_contents(self::$__path . $key)));
 	}
 
 	/**
@@ -211,7 +220,10 @@ class Cache
 	 */
 	public static function &write($key, $data)
 	{
-		if(@file_put_contents(self::$__path . $key, base64_encode(serialize($data)), LOCK_EX) === false)
+		if((bool)self::$use_compression
+			? @file_put_contents(self::$__path . $key,
+				base64_encode(gzcompress(serialize($data))), LOCK_EX) === false
+			: @file_put_contents(self::$__path . $key, base64_encode(serialize($data)), LOCK_EX) === false)
 		{
 			throw new \Exception('Failed to write cache file \'' . self::$__path . $key . '\'');
 		}
