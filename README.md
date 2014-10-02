@@ -844,7 +844,7 @@ All cache files can be removed by using the command:
 ```php
 \Xap\Cache::flush(); // flush all cache files
 ```
-> By default Xap uses compression for cache files (requires PHP [Zlib functions](http://php.net/manual/en/book.zlib.php)). To globally disable compression use:
+> By default Xap uses compression for cache files (requires PHP <a href="http://php.net/manual/en/book.zlib.php" target="_blank">Zlib functions</a>). To globally disable compression use:
 ```php
 \Xap\Cache::$use_compression = false;
 ```
