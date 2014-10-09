@@ -62,6 +62,7 @@ xap([
 	'password' => 'mypass',
 	'errors' => true, // true: Exceptions, false: no Exceptions, use error methods
 	'debug' => true // turn logging on/off
+]);
 ```
 
 Next, include the bootstrap file in your project file:
@@ -71,27 +72,8 @@ require_once './xap.bootstrap.php';
 
 Now execute SELECT query:
 ```php
-try
-{
-	$user = xap('users.14'); // same as "SELECT * FROM users WHERE id = '14'"
-	if($user) echo $user->fullname; // print record field value
-}
-catch(\Exception $ex)
-{
-	// warn here
-}
-```
-Or if errors are turned off example:
-```php
 $user = xap('users.14'); // same as "SELECT * FROM users WHERE id = '14'"
-if(!xap(':error'))
-{
-	if($user) echo $user->fullname; // print record field value
-}
-else
-{
-	echo xap(':error_last'); // print error
-}
+if($user) echo $user->fullname; // print record column value
 ```
 
 ## Commands
@@ -368,14 +350,31 @@ $log = xap(':log'); // returns array of debug log messages
 > Debug mode must be enabled for this example
 
 #### Error Checking
-Check if error has occurred example:
+Check if error has occurred when errors are *on* (throws exceptions) example:
 ```php
-if(xap(':error'))
+try
 {
-	// do something
+    $user = xap('users.14'); // same as "SELECT * FROM users WHERE id = '14'"
+    if($user) echo $user->fullname; // print record field value
+}
+catch(\Exception $ex)
+{
+	// warn here
+	echo 'Database error: ' . $ex->getMessage();
 }
 ```
-> For error checking errors must be disabled, otherwise exception is thrown
+Or, if errors are *off* use error commands:
+```php
+$user = xap('users.14'); // same as "SELECT * FROM users WHERE id = '14'"
+if(!xap(':error'))
+{
+    if($user) echo $user->fullname; // print record field value
+}
+else
+{
+    echo xap(':error_last'); // print error
+}
+```
 
 #### Get Last Error
 Get last error string example:
