@@ -7,13 +7,13 @@
 require_once './lib/Xap/Engine.php';
 
 // import Xap Model class (if using '/model' query option)
-require_once './lib/Xap/Model.php';
+// require_once './lib/Xap/Model.php';
 
 // import Xap Decorate class (if using decorators)
-require_once './lib/Xap/Decorate.php';
+// require_once './lib/Xap/Decorate.php';
 
 // import Xap Cache class (if using '/cache' query option for caching)
-require_once './lib/Xap/Cache.php';
+// require_once './lib/Xap/Cache.php';
 
 // import xap() function
 require_once './lib/Xap/xap.php';
