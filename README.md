@@ -112,7 +112,7 @@ if($r) echo $r->fullname;
 
 // using plain SQL in query example
 // SELECT fullname, is_active FROM users WHERE id = '2' AND fullname = 'Shay'
-$r = xap('users(fullname, is_active).2 WHERE fullname = ? LIMIT 1', ['Name']);
+$r = xap('users(fullname, is_active).2 WHERE fullname = ?', ['Name']);
 ```
 > Query options can be used when selecting with key like:
 ```php
