@@ -840,7 +840,7 @@ $items = xap('items(title, sku, is_active)/cache LIMIT 10');
 > Custom cache key prefixes should only include word characters (`\w`), all other characters will be removed
 
 Likewise, a custom cache key can be used, for example:
-``php
+```php
 // set cache key to 'my-custom-cache'
 \Xap\Cache::setCacheKey('my-custom-cache');
 ```
