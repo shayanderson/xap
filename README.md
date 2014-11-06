@@ -820,7 +820,7 @@ xap(':cache 1 hour'); // refresh cache every hour
 $items = xap('items(title, sku, is_active)/cache LIMIT 10');
 ```
 Now the recordset will expire every 1 hour.
-> Cache expire times can be strings like: `1 hour` or `30 minutes` or `15 seconds`, or an integer for seconds like `25` would be converted to `25 seconds`
+> Cache expire times can be strings like: `1 hour` or `30 minutes` or `15 seconds`, or an integer for seconds like `25` would be converted to `25 seconds`. Also the cache expire time `never` can be used to allow a never expire cache.
 
 A custom expire time is only used for a *single query*, for example:
 ```php
@@ -838,6 +838,13 @@ A custom cache key prefix can be used. This can be helpful when managing cache f
 $items = xap('items(title, sku, is_active)/cache LIMIT 10');
 ```
 > Custom cache key prefixes should only include word characters (`\w`), all other characters will be removed
+
+Likewise, a custom cache key can be used, for example:
+``php
+// set cache key to 'my-custom-cache'
+\Xap\Cache::setCacheKey('my-custom-cache');
+```
+> Custom cache keys can only include word characters (`\w`) and hyphens `-`
 
 All cache files can be removed by using the command:
 ```php

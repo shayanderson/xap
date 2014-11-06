@@ -32,6 +32,13 @@ class Cache
 	private static $__expire_global = '-30 seconds';
 
 	/**
+	 * Cache key (override)
+	 *
+	 * @var string
+	 */
+	private static $__key;
+
+	/**
 	 * Cache key prefix
 	 *
 	 * @var string
@@ -60,7 +67,7 @@ class Cache
 	 */
 	private static function __formatExpire($expire)
 	{
-		return '-' . ( is_int($expire) ? $expire . ' seconds' : $expire );
+		return '-' . ( is_int($expire) ? $expire . ' seconds' : trim($expire) );
 	}
 
 	/**
@@ -71,6 +78,7 @@ class Cache
 	private static function __reset()
 	{
 		self::$__expire = self::$__expire_global;
+		self::$__key = null;
 		self::$__key_prefix = null;
 	}
 
@@ -114,6 +122,11 @@ class Cache
 	 */
 	public static function getKey(&$connection_id, &$query, &$query_params)
 	{
+		if(self::$__key !== null) // custom key
+		{
+			return self::$__key;
+		}
+
 		return ( self::$__key_prefix !== null ? self::$__key_prefix . '-' : '' )
 			. sha1($connection_id . $query . ( is_array($query_params) ? implode('', $query_params) : null ));
 	}
@@ -138,6 +151,12 @@ class Cache
 	{
 		if(is_readable(self::$__path . $key))
 		{
+			if(strcasecmp(self::getExpire(), 'never') === 0) // never expire cache
+			{
+				self::__reset();
+				return true;
+			}
+
 			if(@filemtime(self::$__path . $key) < strtotime(self::$__expire)) // expire cache
 			{
 				self::__reset();
@@ -163,6 +182,24 @@ class Cache
 		return (bool)self::$use_compression
 			? @unserialize(gzuncompress(base64_decode(file_get_contents(self::$__path . $key))))
 			: @unserialize(base64_decode(file_get_contents(self::$__path . $key)));
+	}
+
+	/**
+	 * Cache key setter
+	 *
+	 * @param string $key (\w and '-' characters only)
+	 * @return void
+	 * @throws \Exception (when cache key contains invalid characters)
+	 */
+	public static function setCacheKey($key)
+	{
+		if(!preg_match('/^[\w\-]+$/', $key))
+		{
+			throw new \Exception('Failed to set cache key \'' . $key
+				. '\', inavlid characters, only \w + \'-\' characters allowed');
+		}
+
+		self::$__key = $key;
 	}
 
 	/**
