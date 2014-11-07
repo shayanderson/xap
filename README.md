@@ -430,7 +430,7 @@ Now all Xap log messages will be sent to the custom callable log handler.
 	'log_handler' => function($msg)
 	{
 		echo '<b>Message:</b> ' . $msg . '<br />';
-		return true; // flag as <i>handled</i> do not pass message to Xap log handler
+		return true; // flag as handled do not pass message to Xap log handler
 	}
 	...
 ```
