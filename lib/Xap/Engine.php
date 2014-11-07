@@ -3,7 +3,7 @@
  * Xap - MySQL Rapid Development Engine for PHP 5.5+
  *
  * @package Xap
- * @version 0.0.5
+ * @version 0.0.6
  * @copyright 2014 Shay Anderson <http://www.shayanderson.com>
  * @license MIT License <http://www.opensource.org/licenses/mit-license.php>
  * @link <https://github.com/shayanderson/xap>
