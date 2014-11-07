@@ -427,7 +427,7 @@ Now all Xap log messages will be sent to the custom callable log handler.
 > If a custom log handler is used and the Xap log handler should be disabled the custom log handler callable must return `true`, for example:
 ```php
 	...
-	'log_handler' => function($msg) { echo '<b>Message:</b> ' . $msg . '<br />'; return true; }
+	'log_handler' => function($msg) { echo '<b>Message:</b> ' . $msg . '<br />'; }
 	...
 ```
 Now the default Xap log handler has been disabled.
@@ -436,7 +436,7 @@ The `log_handler` command can be used to insert log message into the database (w
 ```php
 	...
 	// send all log messages to the `event_log` table columne `message`
-	'log_handler' => function($msg) { xap('event_log:log_handler', ['message' => $msg]); return true; }
+	'log_handler' => function($msg) { xap('event_log:log_handler', ['message' => $msg]); }
 	...
 ```
 
