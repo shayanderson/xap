@@ -244,7 +244,7 @@ class Engine
 
 		if($this->__conf[self::KEY_CONF_ERRORS])
 		{
-			if($this->__conf[self::KEY_CONF_ERROR_HANDLER] !== null)
+			if($this->__conf[self::KEY_CONF_ERROR_HANDLER] !== null && self::$__is_logging)
 			{
 				$this->__conf[self::KEY_CONF_ERROR_HANDLER]($message); // custom error handler
 			}
