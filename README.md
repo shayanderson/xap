@@ -436,7 +436,6 @@ Now all Xap log messages will be sent to the custom callable log handler.
 ```
 Now the default Xap log handler has been disabled.
 
-#### Log Handler Command
 The `log_handler` command can be used to insert log message into the database (without logging the actual log message being sent to the database), for example:
 ```php
 	...
