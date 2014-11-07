@@ -29,6 +29,7 @@ Here is a list of Xap commands:
 - [`id`](https://github.com/shayanderson/xap#insert-with-insert-id) - get last insert ID
 - [`key`](https://github.com/shayanderson/xap#custom-table-primary-key-column-name) - get/set table primary key column name (default 'id')
 - [`log`](https://github.com/shayanderson/xap#debug-log) - get debug log (debugging must be turned on)
+- [`log_handler`](https://github.com/shayanderson/xap#custom-log-handler) - add log message to database log (debugging must be turned on)
 - [`mod`](https://github.com/shayanderson/xap#update) - update record(s) (can also use `update`)
 - [`pagination`](https://github.com/shayanderson/xap#pagination) - get/set pagination params
 - [`query`](https://github.com/shayanderson/xap#execute-query) - execute manual query
@@ -423,6 +424,21 @@ xap([
 	'log_handler' => function($msg) { echo '<b>Message:</b> ' . $msg . '<br />'; }
 ```
 Now all Xap log messages will be sent to the custom callable log handler.
+> If a custom log handler is used and the Xap log handler should be disabled the custom log handler callable must return `true`, for example:
+```php
+	...
+	'log_handler' => function($msg) { echo '<b>Message:</b> ' . $msg . '<br />'; return true; }
+	...
+```
+Now the default Xap log handler has been disabled.
+
+The `log_handler` command can be used to insert log message into the database (without logging the actual log message being sent to the database), for example:
+```php
+	...
+	// send all log messages to the `event_log` table columne `message`
+	'log_handler' => function($msg) { xap('event_log:log_handler', ['message' => $msg]); return true; }
+	...
+```
 
 ### Custom Error Handler
 A custom error handler can be used when setting a database connection, for example:

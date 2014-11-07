@@ -122,6 +122,13 @@ class Engine
 	private $__id;
 
 	/**
+	 * Logging enabled flag
+	 *
+	 * @var boolean
+	 */
+	private static $__is_logging = true;
+
+	/**
 	 * Table name to primary key column name map
 	 *
 	 * @var array
@@ -325,16 +332,17 @@ class Engine
 	 */
 	private function __log($message)
 	{
-		if($this->__conf[self::KEY_CONF_DEBUG])
+		if($this->__conf[self::KEY_CONF_DEBUG] && self::$__is_logging)
 		{
 			if($this->__conf[self::KEY_CONF_LOG_HANDLER] !== null)
 			{
-				$this->__conf[self::KEY_CONF_LOG_HANDLER]($message); // custom log handler
+				if($this->__conf[self::KEY_CONF_LOG_HANDLER]($message)) // custom log handler
+				{
+					return;
+				}
 			}
-			else
-			{
-				$this->__log[] = $message;
-			}
+
+			$this->__log[] = $message;
 		}
 	}
 
@@ -749,6 +757,7 @@ class Engine
 				{
 					case 'add': // insert|replace
 					case 'insert':
+					case 'log_handler':
 					case 'replace':
 						if(is_object($args[0])) // object add
 						{
@@ -786,6 +795,17 @@ class Engine
 						if($options & self::OPT_QUERY)
 						{
 							return $q;
+						}
+						else if($cmd[self::KEY_CMD] === 'log_handler')
+						{
+							self::$__is_logging = false;
+							if(self::__isConnection($cmd[self::KEY_CMD_CONN_ID]))
+							{
+								self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($q, $params,
+									self::QUERY_TYPE_AFFECTED);
+							}
+							self::$__is_logging = true;
+							return;
 						}
 						else
 						{
