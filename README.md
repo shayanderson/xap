@@ -348,7 +348,8 @@ Get debug log array example:
 ```php
 $log = xap(':log'); // returns array of debug log messages
 ```
-> Debug mode must be enabled for this example
+Debug mode must be enabled for this example
+> The default log handler retains the most recent five thousand log messages (memory safe). A [custom log handler](https://github.com/shayanderson/xap#custom-log-handler) can except all log messages.
 
 #### Error Checking
 Check if error has occurred when errors are *on* (throws exceptions) example:

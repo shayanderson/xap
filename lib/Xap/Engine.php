@@ -3,7 +3,7 @@
  * Xap - MySQL Rapid Development Engine for PHP 5.5.0+
  *
  * @package Xap
- * @version 0.0.6
+ * @version 0.0.7
  * @copyright 2015 Shay Anderson <http://www.shayanderson.com>
  * @license MIT License <http://www.opensource.org/licenses/mit-license.php>
  * @link <https://github.com/shayanderson/xap>
@@ -340,6 +340,11 @@ class Engine
 				{
 					return;
 				}
+			}
+
+			if(count($this->__log) > 5000) // limit message logs (mems safe)
+			{
+				array_shift($this->__log);
 			}
 
 			$this->__log[] = $message;
