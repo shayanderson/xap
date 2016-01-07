@@ -510,7 +510,9 @@ If multiple columns are in the query only the first column value is returned, ex
 ```php
 $email = xap(':query/value SELECT email, fullname FROM users WHERE id = ?', [1]); // string
 ```
-> Other options not mentioned here are: [`/cache`](https://github.com/shayanderson/xap#caching), [`/pagination`](https://github.com/shayanderson/xap#pagination) and [`/model`](https://github.com/shayanderson/xap#data-modeling)
+
+##### Other Options
+Other options not mentioned here are: [`/cache`](https://github.com/shayanderson/xap#caching), [`/pagination`](https://github.com/shayanderson/xap#pagination) and [`/model`](https://github.com/shayanderson/xap#data-modeling)
 
 ### Multiple Database Connections
 Using multiple database connections is easy, register database connections in bootstrap:
