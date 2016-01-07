@@ -1,10 +1,10 @@
 <?php
 /**
- * Xap - MySQL Rapid Development Engine for PHP 5.5.0+
+ * Xap - MySQL Rapid Development Engine for PHP 5.5+
  *
  * @package Xap
- * @version 0.0.7
- * @copyright 2015 Shay Anderson <http://www.shayanderson.com>
+ * @version 0.0.8
+ * @copyright 2016 Shay Anderson <http://www.shayanderson.com>
  * @license MIT License <http://www.opensource.org/licenses/mit-license.php>
  * @link <https://github.com/shayanderson/xap>
  */
@@ -34,7 +34,7 @@
  *		tables		(show database tables)
  *		transaction	(start transaction)
  *
- * @author Shay Anderson 07.14 <http://www.shayanderson.com/contact>
+ * @author Shay Anderson <http://www.shayanderson.com/contact>
  *
  * @param string $cmd
  * @param mixed $_ (optional values)

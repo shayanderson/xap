@@ -1,10 +1,10 @@
 <?php
 /**
- * Xap - MySQL Rapid Development Engine for PHP 5.5.0+
+ * Xap - MySQL Rapid Development Engine for PHP 5.5+
  *
  * @package Xap
- * @version 0.0.7
- * @copyright 2015 Shay Anderson <http://www.shayanderson.com>
+ * @version 0.0.8
+ * @copyright 2016 Shay Anderson <http://www.shayanderson.com>
  * @license MIT License <http://www.opensource.org/licenses/mit-license.php>
  * @link <https://github.com/shayanderson/xap>
  */
@@ -13,7 +13,7 @@ namespace Xap;
 /**
  * Xap Engine class
  *
- * @author Shay Anderson 07.14 <http://www.shayanderson.com/contact>
+ * @author Shay Anderson <http://www.shayanderson.com/contact>
  */
 class Engine
 {
@@ -84,7 +84,8 @@ class Engine
 		OPT_FIRST = 0x4,
 		OPT_MODEL = 0x8,
 		OPT_PAGINATION = 0x10,
-		OPT_QUERY = 0x20;
+		OPT_QUERY = 0x20,
+		OPT_VALUE = 0x40;
 
 	/**
 	 * Forced query types
@@ -171,7 +172,8 @@ class Engine
 		{
 			if(isset($this->__conf[$k]) || array_key_exists($k, $this->__conf))
 			{
-				if(($k === self::KEY_CONF_ERROR_HANDLER || $k === self::KEY_CONF_LOG_HANDLER) && !is_callable($v))
+				if(($k === self::KEY_CONF_ERROR_HANDLER || $k === self::KEY_CONF_LOG_HANDLER)
+					&& !is_callable($v))
 				{
 					continue; // handlers must be callable
 				}
@@ -250,7 +252,8 @@ class Engine
 			}
 			else
 			{
-				if($this->__conf[self::KEY_CONF_DEBUG] && $this->__conf[self::KEY_CONF_LOG_HANDLER] === null)
+				if($this->__conf[self::KEY_CONF_DEBUG]
+					&& $this->__conf[self::KEY_CONF_LOG_HANDLER] === null)
 				{
 					print_r($this->getLog()); // print debug log
 				}
@@ -292,15 +295,17 @@ class Engine
 		{
 			$hosts[$this->__id] = $connection;
 
-			$this->__log('Connection \'' . $this->__id . '\' registered (host: \'' . $connection[self::KEY_CONN_HOST]
-				. '\', database: \'' . $connection[self::KEY_CONN_DATABASE] . '\')');
+			$this->__log('Connection \'' . $this->__id . '\' registered (host: \''
+				. $connection[self::KEY_CONN_HOST] . '\', database: \''
+				. $connection[self::KEY_CONN_DATABASE] . '\')');
 		}
 		else if($this->__pdo === null) // init
 		{
 			try
 			{
-				$this->__pdo = new \PDO('mysql:host=' . $hosts[$this->__id][self::KEY_CONN_HOST] . ';dbname='
-					. $hosts[$this->__id][self::KEY_CONN_DATABASE], $hosts[$this->__id][self::KEY_CONN_USER],
+				$this->__pdo = new \PDO('mysql:host=' . $hosts[$this->__id][self::KEY_CONN_HOST]
+					. ';dbname=' . $hosts[$this->__id][self::KEY_CONN_DATABASE],
+					$hosts[$this->__id][self::KEY_CONN_USER],
 					$hosts[$this->__id][self::KEY_CONN_PASSWORD]);
 				$this->__pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
 			}
@@ -371,7 +376,8 @@ class Engine
 			$paging[self::KEY_PAGE_PREV] = $paging[self::KEY_PAGE_PAGE] - 1;
 		}
 
-		if($paging[self::KEY_PAGE_NEXT_STR] !== null && $paging[self::KEY_PAGE_NEXT] > 0) // next decorator
+		// next decorator
+		if($paging[self::KEY_PAGE_NEXT_STR] !== null && $paging[self::KEY_PAGE_NEXT] > 0)
 		{
 			$paging[self::KEY_PAGE_NEXT_STR] = str_replace('{$next}', $paging[self::KEY_PAGE_NEXT],
 				$paging[self::KEY_PAGE_NEXT_STR]);
@@ -381,7 +387,8 @@ class Engine
 			$paging[self::KEY_PAGE_NEXT_STR] = '';
 		}
 
-		if($paging[self::KEY_PAGE_PREV_STR] !== null && $paging[self::KEY_PAGE_PREV] > 0) // prev decorator
+		// prev decorator
+		if($paging[self::KEY_PAGE_PREV_STR] !== null && $paging[self::KEY_PAGE_PREV] > 0)
 		{
 			$paging[self::KEY_PAGE_PREV_STR] = str_replace('{$prev}', $paging[self::KEY_PAGE_PREV],
 				$paging[self::KEY_PAGE_PREV_STR]);
@@ -405,8 +412,8 @@ class Engine
 		if(!preg_match('/LIMIT[\s]+[\d,]+(OFFSET[\s]+[\d]+)?/i', $query))
 		{
 			$p = [self::KEY_PAGE_RPP => $pagination[self::KEY_PAGE_RPP], self::KEY_PAGE_PAGE =>
-				$pagination[self::KEY_PAGE_PAGE], self::KEY_PAGE_NEXT => 0, self::KEY_PAGE_PREV => 0,
-				self::KEY_PAGE_OFFSET => 0,
+				$pagination[self::KEY_PAGE_PAGE], self::KEY_PAGE_NEXT => 0,
+				self::KEY_PAGE_PREV => 0, self::KEY_PAGE_OFFSET => 0,
 				self::KEY_PAGE_NEXT_STR => $pagination[self::KEY_PAGE_NEXT_STR],
 				self::KEY_PAGE_PREV_STR => $pagination[self::KEY_PAGE_PREV_STR]];
 			$p[self::KEY_PAGE_OFFSET] = ($p[self::KEY_PAGE_PAGE] - 1) * $p[self::KEY_PAGE_RPP];
@@ -450,7 +457,7 @@ class Engine
 			$cmd = substr($cmd, strpos($cmd, ']') + 1); // rm connection ID '[1]'
 		}
 
-		// test for table: 'table:cmd' or 'table.id' or 'table/option' or 'table [SQL]' or 'table(cols)'
+		// test for table: 'table:cmd' | 'table.id' | 'table/option' | 'table [SQL]' | 'table(cols)'
 		if(preg_match('/^([\w]+)(?:\:|\.|\/|\s|\()/', $cmd, $m)) // match 'table(:|.|/| |()'
 		{
 			$c[self::KEY_CMD_TABLE] = $m[1];
@@ -494,12 +501,16 @@ class Engine
 
 		if(isset($c[self::KEY_CMD_ID]) && isset($c[self::KEY_CMD_TABLE])) // add select ID to SQL
 		{
-			$sql = 'WHERE ' . self::__getConnection($c[self::KEY_CMD_CONN_ID])->getKey($c[self::KEY_CMD_TABLE])
-				. '=' . self::__getConnection($c[self::KEY_CMD_CONN_ID])->__getPdo()->quote($c[self::KEY_CMD_ID]);
+			$sql = 'WHERE '
+				. self::__getConnection($c[self::KEY_CMD_CONN_ID])->getKey($c[self::KEY_CMD_TABLE])
+				. '=' . self::__getConnection($c[self::KEY_CMD_CONN_ID])->__getPdo()
+					->quote($c[self::KEY_CMD_ID]);
 
-			if(strcasecmp(substr($c[self::KEY_CMD_SQL], 0, 5), 'where') === 0) // WHERE exists in SQL
+			// WHERE exists in SQL
+			if(strcasecmp(substr($c[self::KEY_CMD_SQL], 0, 5), 'where') === 0)
 			{
-				$c[self::KEY_CMD_SQL] = $sql . ' AND ' . trim(substr($c[self::KEY_CMD_SQL], 5)); // rm WHERE, add AND
+				// rm WHERE, add AND
+				$c[self::KEY_CMD_SQL] = $sql . ' AND ' . trim(substr($c[self::KEY_CMD_SQL], 5));
 			}
 			else
 			{
@@ -521,7 +532,7 @@ class Engine
 	 * @staticvar int $connection_id
 	 * @param array $connection
 	 * @return int (connection ID)
-	 * @throws \Exception (when connection ID not int, or connection already exists, or invalid connection params)
+	 * @throws \Exception (when connection ID not int, connection already exists, invalid connection params)
 	 */
 	private static function __setConnection(array $connection)
 	{
@@ -532,7 +543,8 @@ class Engine
 		{
 			if(isset($connection[self::KEY_CONN_ID])) // manual connection ID
 			{
-				if(!is_int($connection[self::KEY_CONN_ID]) && !ctype_digit($connection[self::KEY_CONN_ID]))
+				if(!is_int($connection[self::KEY_CONN_ID])
+					&& !ctype_digit($connection[self::KEY_CONN_ID]))
 				{
 					throw new \Exception('Connection ID \'' . $connection[self::KEY_CONN_ID]
 						. '\' must be integer only');
@@ -542,7 +554,8 @@ class Engine
 
 				if(self::__isConnection($connection[self::KEY_CONN_ID]))
 				{
-					throw new \Exception('Connection ID \'' . $connection[self::KEY_CONN_ID] . '\' already exists');
+					throw new \Exception('Connection ID \'' . $connection[self::KEY_CONN_ID]
+						. '\' already exists');
 				}
 			}
 			else // auto ID
@@ -561,7 +574,8 @@ class Engine
 		}
 		else
 		{
-			throw new \Exception('Invalid connection parameters (required: host, database, user, password)');
+			throw new \Exception('Invalid connection parameters (required: host, database, user,'
+				. ' password)');
 		}
 	}
 
@@ -580,7 +594,8 @@ class Engine
 			'FIRST' => self::OPT_FIRST,
 			'MODEL' => self::OPT_MODEL,
 			'PAGINATION' => self::OPT_PAGINATION,
-			'QUERY' => self::OPT_QUERY
+			'QUERY' => self::OPT_QUERY,
+			'VALUE' => self::OPT_VALUE
 		];
 
 		$options = 0;
@@ -660,16 +675,16 @@ class Engine
 
 		if(is_string($cmd)) // parse cmd
 		{
-			static $pagination = [self::KEY_PAGE_RPP => 10, self::KEY_PAGE_PAGE => 1, self::KEY_PAGE_NEXT_STR => null,
-				self::KEY_PAGE_PREV_STR => null];
+			static $pagination = [self::KEY_PAGE_RPP => 10, self::KEY_PAGE_PAGE => 1,
+				self::KEY_PAGE_NEXT_STR => null, self::KEY_PAGE_PREV_STR => null];
 			$cmd = self::__parseCmd($cmd); // parse cmd
 			$options = &self::__setOptions($cmd);
 			$params = []; // query params
 
 			if(!isset($cmd[self::KEY_CMD])) // SELECT cmd
 			{
-				$q = 'SELECT' . $cmd[self::KEY_CMD_OPTIONS] . ' ' . $cmd[self::KEY_CMD_COLUMNS] . ' FROM '
-					. $cmd[self::KEY_CMD_TABLE] . $cmd[self::KEY_CMD_SQL];
+				$q = 'SELECT' . $cmd[self::KEY_CMD_OPTIONS] . ' ' . $cmd[self::KEY_CMD_COLUMNS]
+					. ' FROM ' . $cmd[self::KEY_CMD_TABLE] . $cmd[self::KEY_CMD_SQL];
 
 				if($options & self::OPT_PAGINATION) // add pagination
 				{
@@ -692,46 +707,53 @@ class Engine
 					if(stripos($cmd[self::KEY_CMD_SQL], 'limit') !== false
 						&& preg_match('/LIMIT[\s]+[\d]+/i', $cmd[self::KEY_CMD_SQL]))
 					{
-						throw new \Exception('Failed to initialize model object, LIMIT clause already exists'
-							. ' in query');
+						throw new \Exception('Failed to initialize model object, LIMIT clause'
+							. ' already exists in query');
 					}
 
-					// prep query SQL
-					if(strcasecmp(substr($cmd[self::KEY_CMD_SQL], 1, 5), 'where') === 0) // WHERE exists in SQL
+					// prep query SQL, WHERE exists in SQL
+					if(strcasecmp(substr($cmd[self::KEY_CMD_SQL], 1, 5), 'where') === 0)
 					{
 						// replace WHERE with AND
 						$cmd[self::KEY_CMD_SQL] = ' AND' . substr($cmd[self::KEY_CMD_SQL], 6);
 					}
 
 					$cmd[self::KEY_CMD_SQL] = ' WHERE ' // add record key = :[key]
-							. self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->getKey($cmd[self::KEY_CMD_TABLE])
+							. self::__getConnection($cmd[self::KEY_CMD_CONN_ID])
+								->getKey($cmd[self::KEY_CMD_TABLE])
 							. '=:'
-							. self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->getKey($cmd[self::KEY_CMD_TABLE])
+							. self::__getConnection($cmd[self::KEY_CMD_CONN_ID])
+								->getKey($cmd[self::KEY_CMD_TABLE])
 							. $cmd[self::KEY_CMD_SQL];
 
 					return new Model($cmd[self::KEY_CMD_COLUMNS] === '*' ? []
 						: array_map('trim', explode(',', $cmd[self::KEY_CMD_COLUMNS])), // columns
 						$cmd[self::KEY_CMD_TABLE], // table
-						self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->getKey($cmd[self::KEY_CMD_TABLE]), // key
-						$cmd[self::KEY_CMD_CONN_ID], $params, $cmd[self::KEY_CMD_SQL], // connection ID, params, sql
+						self::__getConnection($cmd[self::KEY_CMD_CONN_ID])
+							->getKey($cmd[self::KEY_CMD_TABLE]), // key
+						// connection ID, params, sql
+						$cmd[self::KEY_CMD_CONN_ID], $params, $cmd[self::KEY_CMD_SQL],
 						$decorator, $decorator_filters); // decorator
 				}
 				else if(isset($p)) // exec query with pagination
 				{
-					$r = self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($q, $params, self::QUERY_TYPE_ROWS,
-						$options & self::OPT_CACHE, $options & self::OPT_ARRAY);
+					$r = self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($q, $params,
+						self::QUERY_TYPE_ROWS, $options & self::OPT_CACHE,
+						$options & self::OPT_ARRAY);
 
 					self::__paginationPrepData($r, $p);
 
 					return ['pagination' =>
-						self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->conf(self::KEY_CONF_OBJECTS)
-						? (object)$p : $p, 'rows' => self::__decorate($r, $decorator, $decorator_filters,
-						self::DECORATE_TYPE_ARRAY)];
+						self::__getConnection($cmd[self::KEY_CMD_CONN_ID])
+							->conf(self::KEY_CONF_OBJECTS)
+						? (object)$p : $p, 'rows' => self::__decorate($r, $decorator,
+							$decorator_filters,	self::DECORATE_TYPE_ARRAY)];
 				}
 				else // exec query
 				{
-					// select ID or /first option, return first row only
-					if(isset($cmd[self::KEY_CMD_ID]) || $options & self::OPT_FIRST)
+					// select ID or /first option or /value option, return first row only
+					if(isset($cmd[self::KEY_CMD_ID]) || $options & self::OPT_FIRST
+						|| $options & self::OPT_VALUE)
 					{
 						if(!preg_match('/LIMIT[\s]+[\d]+/i', $q))
 						{
@@ -739,19 +761,27 @@ class Engine
 						}
 
 						$r = self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($q, $params,
-							self::QUERY_TYPE_ROWS, $options & self::OPT_CACHE, $options & self::OPT_ARRAY);
+							self::QUERY_TYPE_ROWS, $options & self::OPT_CACHE,
+							$options & self::OPT_ARRAY);
 
 						if(isset($r[0]))
 						{
-							return self::__decorate($r[0], $decorator, $decorator_filters, self::DECORATE_TYPE_ARRAY);
+							if($options & self::OPT_VALUE) // option /value, return value only
+							{
+								return current($r[0]);
+							}
+
+							return self::__decorate($r[0], $decorator, $decorator_filters,
+								self::DECORATE_TYPE_ARRAY);
 						}
 
 						return $decorator !== null ? '' : null; // no record
 					}
 					else
 					{
-						return self::__decorate(self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($q, $params,
-							self::QUERY_TYPE_ROWS, $options & self::OPT_CACHE, $options & self::OPT_ARRAY),
+						return self::__decorate(self::__getConnection($cmd[self::KEY_CMD_CONN_ID])
+							->query($q, $params, self::QUERY_TYPE_ROWS, $options & self::OPT_CACHE,
+							$options & self::OPT_ARRAY),
 							$decorator, $decorator_filters,	self::DECORATE_TYPE_ARRAY);
 					}
 				}
@@ -793,9 +823,10 @@ class Engine
 							}
 						}
 
-						$q = ( $cmd[self::KEY_CMD] === 'replace' ? 'REPLACE' : 'INSERT' ) . $cmd[self::KEY_CMD_OPTIONS]
-							. ' INTO ' . $cmd[self::KEY_CMD_TABLE] . '(' . implode(', ', array_keys($args[0]))
-							. ') VALUES(' . implode(', ', $values) . ')';
+						$q = ( $cmd[self::KEY_CMD] === 'replace' ? 'REPLACE' : 'INSERT' )
+							. $cmd[self::KEY_CMD_OPTIONS] . ' INTO ' . $cmd[self::KEY_CMD_TABLE]
+							. '(' . implode(', ', array_keys($args[0])) . ') VALUES('
+							. implode(', ', $values) . ')';
 
 						if($options & self::OPT_QUERY)
 						{
@@ -806,17 +837,18 @@ class Engine
 							self::$__is_logging = false;
 							if(self::__isConnection($cmd[self::KEY_CMD_CONN_ID]))
 							{
-								self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($q, $params,
-									self::QUERY_TYPE_AFFECTED);
+								self::__getConnection($cmd[self::KEY_CMD_CONN_ID])
+									->query($q, $params, self::QUERY_TYPE_AFFECTED);
 							}
 							self::$__is_logging = true;
 							return;
 						}
 						else
 						{
-							return self::__decorate(self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($q,
-								$params, self::QUERY_TYPE_AFFECTED), $decorator, $decorator_filters,
-								self::DECORATE_TYPE_TEST);
+							return self::__decorate(self::__getConnection(
+								$cmd[self::KEY_CMD_CONN_ID])->query($q, $params,
+									self::QUERY_TYPE_AFFECTED), $decorator, $decorator_filters,
+									self::DECORATE_TYPE_TEST);
 						}
 						break;
 
@@ -835,7 +867,8 @@ class Engine
 									$params_str .= $sep . '?';
 									$params[] = $args[0][$i];
 								}
-								else if(isset($args[0][$i][0]) && strlen($args[0][$i][0]) > 0) // plain SQL
+								// plain SQL
+								else if(isset($args[0][$i][0]) && strlen($args[0][$i][0]) > 0)
 								{
 									$params_str .= $sep . $args[0][$i][0];
 								}
@@ -850,11 +883,14 @@ class Engine
 						}
 						else
 						{
-							return self::__decorate(self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($q,
-								$params, $cmd[self::KEY_CMD] === 'call_affected' ? self::QUERY_TYPE_AFFECTED
-								: ( $cmd[self::KEY_CMD] === 'call_rows' ? self::QUERY_TYPE_ROWS : 0 )), $decorator,
-								$decorator_filters,	$cmd[self::KEY_CMD] === 'call_rows' ? self::DECORATE_TYPE_ARRAY
-								: self::DECORATE_TYPE_TEST);
+							return self::__decorate(
+								self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($q,
+								$params, $cmd[self::KEY_CMD] === 'call_affected'
+									? self::QUERY_TYPE_AFFECTED
+								: ( $cmd[self::KEY_CMD] === 'call_rows'
+										? self::QUERY_TYPE_ROWS : 0 )), $decorator,
+								$decorator_filters,	$cmd[self::KEY_CMD] === 'call_rows'
+									? self::DECORATE_TYPE_ARRAY	: self::DECORATE_TYPE_TEST);
 						}
 						break;
 
@@ -889,11 +925,13 @@ class Engine
 						break;
 
 					case 'commit': // commit transaction
-						return self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->__getPdo()->commit();
+						return self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->__getPdo()
+							->commit();
 						break;
 
 					case 'count': // count records
-						$q = 'SELECT COUNT(1) AS count FROM ' . $cmd[self::KEY_CMD_TABLE] . $cmd[self::KEY_CMD_SQL];
+						$q = 'SELECT COUNT(1) AS count FROM ' . $cmd[self::KEY_CMD_TABLE]
+							. $cmd[self::KEY_CMD_SQL];
 
 						if($options & self::OPT_QUERY)
 						{
@@ -907,12 +945,12 @@ class Engine
 							if(isset($r[0]))
 							{
 								$r = (array)$r[0];
-								return self::__decorate((int)$r['count'], $decorator, $decorator_filters,
-									self::DECORATE_TYPE_TEST);
+								return self::__decorate((int)$r['count'], $decorator,
+									$decorator_filters,	self::DECORATE_TYPE_TEST);
 							}
 
-							return $decorator !== null ? self::__decorate(0, $decorator, $decorator_filters,
-								self::DECORATE_TYPE_TEST) : 0;
+							return $decorator !== null ? self::__decorate(0, $decorator,
+								$decorator_filters,	self::DECORATE_TYPE_TEST) : 0;
 						}
 						break;
 
@@ -933,8 +971,8 @@ class Engine
 
 					case 'del': // delete
 					case 'delete':
-						$q = 'DELETE' . $cmd[self::KEY_CMD_OPTIONS] . ' FROM ' . $cmd[self::KEY_CMD_TABLE]
-							. $cmd[self::KEY_CMD_SQL];
+						$q = 'DELETE' . $cmd[self::KEY_CMD_OPTIONS] . ' FROM '
+							. $cmd[self::KEY_CMD_TABLE]	. $cmd[self::KEY_CMD_SQL];
 
 						if($options & self::OPT_QUERY)
 						{
@@ -942,25 +980,27 @@ class Engine
 						}
 						else
 						{
-							return self::__decorate(self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($q,
-								isset($args[0]) ? $args[0] : null, self::QUERY_TYPE_AFFECTED), $decorator,
+							return self::__decorate(self::__getConnection(
+								$cmd[self::KEY_CMD_CONN_ID])->query($q,	isset($args[0])
+									? $args[0] : null, self::QUERY_TYPE_AFFECTED), $decorator,
 								$decorator_filters,	self::DECORATE_TYPE_TEST);
 						}
 						break;
 
 					case 'error': // error check
-						return self::__decorate(self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->isError(),
-							$decorator, $decorator_filters, self::DECORATE_TYPE_TEST);
+						return self::__decorate(self::__getConnection($cmd[self::KEY_CMD_CONN_ID])
+							->isError(), $decorator, $decorator_filters, self::DECORATE_TYPE_TEST);
 						break;
 
 					case 'error_last': // get last error
-						return self::__decorate(self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->getError(),
-							$decorator, $decorator_filters, self::DECORATE_TYPE_STRING);
+						return self::__decorate(self::__getConnection($cmd[self::KEY_CMD_CONN_ID])
+							->getError(), $decorator, $decorator_filters,
+								self::DECORATE_TYPE_STRING);
 						break;
 
 					case 'exists': // check if record(s) exists
-						$q = 'SELECT EXISTS(SELECT 1 FROM ' . $cmd[self::KEY_CMD_TABLE] . $cmd[self::KEY_CMD_SQL]
-							. ') AS is_set';
+						$q = 'SELECT EXISTS(SELECT 1 FROM ' . $cmd[self::KEY_CMD_TABLE]
+							. $cmd[self::KEY_CMD_SQL] . ') AS is_set';
 
 						if($options & self::OPT_QUERY)
 						{
@@ -974,19 +1014,20 @@ class Engine
 							if(isset($r[0]))
 							{
 								$r = (array)$r[0];
-								return self::__decorate((int)$r['is_set'] > 0, $decorator, $decorator_filters,
-									self::DECORATE_TYPE_TEST);
+								return self::__decorate((int)$r['is_set'] > 0, $decorator,
+									$decorator_filters,	self::DECORATE_TYPE_TEST);
 							}
 
-							return $decorator !== null ? self::__decorate(false, $decorator, $decorator_filters,
-								self::DECORATE_TYPE_TEST) : false;
+							return $decorator !== null ? self::__decorate(false, $decorator,
+								$decorator_filters,	self::DECORATE_TYPE_TEST) : false;
 						}
 						break;
 
 					case 'id': // get last insert ID
 						return self::__decorate(
-							self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->__getPdo()->lastInsertId(),
-								$decorator, $decorator_filters, self::DECORATE_TYPE_TEST);
+							self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->__getPdo()
+								->lastInsertId(), $decorator, $decorator_filters,
+									self::DECORATE_TYPE_TEST);
 						break;
 
 					case 'key': // table primary key column name getter/setter
@@ -1003,11 +1044,12 @@ class Engine
 						$cmd[self::KEY_CMD_SQL] = trim($cmd[self::KEY_CMD_SQL]);
 						if(strlen($cmd[self::KEY_CMD_SQL]) > 0) // setter
 						{
-							self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->setKey($cmd[self::KEY_CMD_TABLE],
-								$cmd[self::KEY_CMD_SQL]);
+							self::__getConnection($cmd[self::KEY_CMD_CONN_ID])
+								->setKey($cmd[self::KEY_CMD_TABLE],	$cmd[self::KEY_CMD_SQL]);
 						}
 
-						return self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->getKey($cmd[self::KEY_CMD_TABLE]);
+						return self::__getConnection($cmd[self::KEY_CMD_CONN_ID])
+							->getKey($cmd[self::KEY_CMD_TABLE]);
 						break;
 
 					case 'log': // log getter
@@ -1037,8 +1079,8 @@ class Engine
 						}
 						else
 						{
-							throw new \Exception('Update failed: using scalar value for setting columns and values'
-								. ' (use array or object)');
+							throw new \Exception('Update failed: using scalar value for setting'
+								. ' columns and values (use array or object)');
 						}
 
 						if(isset($args[1]) && is_array($args[1])) // statement params
@@ -1046,8 +1088,9 @@ class Engine
 							$params = array_merge($params, $args[1]);
 						}
 
-						$q = 'UPDATE' . $cmd[self::KEY_CMD_OPTIONS] . ' ' . $cmd[self::KEY_CMD_TABLE] . ' SET '
-							. implode(', ', $values) . $cmd[self::KEY_CMD_SQL];
+						$q = 'UPDATE' . $cmd[self::KEY_CMD_OPTIONS] . ' '
+							. $cmd[self::KEY_CMD_TABLE] . ' SET ' . implode(', ', $values)
+							. $cmd[self::KEY_CMD_SQL];
 
 						if($options & self::OPT_QUERY)
 						{
@@ -1056,9 +1099,9 @@ class Engine
 						else
 						{
 							return self::__decorate(
-								self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($q, $params,
-									self::QUERY_TYPE_AFFECTED), $decorator, $decorator_filters,
-									self::DECORATE_TYPE_TEST);
+								self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($q,
+									$params, self::QUERY_TYPE_AFFECTED), $decorator,
+									$decorator_filters,	self::DECORATE_TYPE_TEST);
 						}
 						break;
 
@@ -1097,7 +1140,8 @@ class Engine
 						{
 							if(preg_match('/^\s*select/i', $cmd[self::KEY_CMD_SQL]))
 							{
-								$p = self::__paginationPrepQuery($cmd[self::KEY_CMD_SQL], $pagination);
+								$p = self::__paginationPrepQuery($cmd[self::KEY_CMD_SQL],
+									$pagination);
 							}
 							else
 							{
@@ -1108,32 +1152,42 @@ class Engine
 
 						if(isset($p)) // preg pagination data
 						{
-							$r = self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($cmd[self::KEY_CMD_SQL],
-								isset($args[0]) ? $args[0] : null, self::QUERY_TYPE_ROWS, $options & self::OPT_CACHE,
-								$options & self::OPT_ARRAY);
+							$r = self::__getConnection($cmd[self::KEY_CMD_CONN_ID])
+								->query($cmd[self::KEY_CMD_SQL], 	isset($args[0])
+									? $args[0] : null, self::QUERY_TYPE_ROWS,
+									$options & self::OPT_CACHE,	$options & self::OPT_ARRAY);
 
 							self::__paginationPrepData($r, $p);
 
 							return ['pagination' =>
-								self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->conf(self::KEY_CONF_OBJECTS)
-								? (object)$p : $p, 'rows' => self::__decorate($r, $decorator, $decorator_filters,
+								self::__getConnection($cmd[self::KEY_CMD_CONN_ID])
+									->conf(self::KEY_CONF_OBJECTS) ? (object)$p : $p,
+									'rows' => self::__decorate($r, $decorator, $decorator_filters,
 									self::DECORATE_TYPE_ARRAY)];
 						}
 						else // execute query
 						{
-							if($options & self::OPT_FIRST) // first record only
+							// first record or value only
+							if($options & self::OPT_FIRST || $options & self::OPT_VALUE)
 							{
 								if(!preg_match('/LIMIT[\s]+[\d]+/i', $cmd[self::KEY_CMD_SQL]))
 								{
-									$cmd[self::KEY_CMD_SQL] = rtrim(rtrim($cmd[self::KEY_CMD_SQL]), ';') . ' LIMIT 1';
+									$cmd[self::KEY_CMD_SQL] = rtrim(rtrim($cmd[self::KEY_CMD_SQL]),
+										';') . ' LIMIT 1';
 								}
 
-								$r = self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($cmd[self::KEY_CMD_SQL],
-										isset($args[0]) ? $args[0] : null, 0, $options & self::OPT_CACHE,
+								$r = self::__getConnection($cmd[self::KEY_CMD_CONN_ID])
+										->query($cmd[self::KEY_CMD_SQL], isset($args[0])
+										? $args[0] : null, 0, $options & self::OPT_CACHE,
 										$options & self::OPT_ARRAY);
 
 								if(isset($r[0]))
 								{
+									if($options & self::OPT_VALUE) // option /value, return value
+									{
+										return current($r[0]);
+									}
+
 									return self::__decorate($r[0], $decorator, $decorator_filters,
 										self::DECORATE_TYPE_ARRAY);
 								}
@@ -1143,8 +1197,9 @@ class Engine
 							else // all records
 							{
 								return self::__decorate(
-									self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($cmd[self::KEY_CMD_SQL],
-										isset($args[0]) ? $args[0] : null, 0, $options & self::OPT_CACHE,
+									self::__getConnection($cmd[self::KEY_CMD_CONN_ID])
+										->query($cmd[self::KEY_CMD_SQL], isset($args[0])
+										? $args[0] : null, 0, $options & self::OPT_CACHE,
 										$options & self::OPT_ARRAY), $decorator, $decorator_filters,
 										self::DECORATE_TYPE_DETECT);
 							}
@@ -1153,7 +1208,8 @@ class Engine
 						break;
 
 					case 'rollback': // rollback transaction
-						return self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->__getPdo()->rollBack();
+						return self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->__getPdo()
+							->rollBack();
 						break;
 
 					case 'tables': // show database tables
@@ -1179,12 +1235,13 @@ class Engine
 						break;
 
 					case 'transaction': // begin transaction
-						return self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->__getPdo()->beginTransaction();
+						return self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->__getPdo()
+							->beginTransaction();
 						break;
 
 					case 'truncate': // truncate table
-						return self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query('TRUNCATE '
-							. $cmd[self::KEY_CMD_TABLE]);
+						return self::__getConnection($cmd[self::KEY_CMD_CONN_ID])
+							->query('TRUNCATE '	. $cmd[self::KEY_CMD_TABLE]);
 						break;
 
 					default: // unknown command
@@ -1260,7 +1317,8 @@ class Engine
 	 * @param boolean $force_array
 	 * @return mixed (array|boolean|int)
 	 */
-	public function query($query, $params = null, $force_query_type = 0, $use_cache = false, $force_array = false)
+	public function query($query, $params = null, $force_query_type = 0, $use_cache = false,
+		$force_array = false)
 	{
 		$this->__log('Query: ' . $query);
 		if(is_array($params) && !empty($params))
@@ -1270,7 +1328,7 @@ class Engine
 			{
 				if(is_array($v))
 				{
-					$this->__error('Invalid query parameter(s) type: array (only use scalar values)');
+					$this->__error('Invalid query param(s) type array (use only scalar values)');
 					return false;
 				}
 
@@ -1299,18 +1357,20 @@ class Engine
 				if($sh->execute( is_array($params) ? $params : null ))
 				{
 					if($force_query_type === self::QUERY_TYPE_ROWS
-						|| preg_match('/^\s*(select|show|describe|optimize|pragma|repair)/i', $query)) // fetch
+						|| preg_match('/^\s*(select|show|describe|optimize|pragma|repair)/i',
+							$query)) // fetch
 					{
 						if(isset($cache_key)) // write/return cache
 						{
 							$this->__log('(Cache write: ' . $cache_key . ')');
-							return Cache::write($cache_key, $sh->fetchAll( $this->conf(self::KEY_CONF_OBJECTS)
-								&& !$force_array ? \PDO::FETCH_CLASS : \PDO::FETCH_ASSOC ));
+							return Cache::write($cache_key, $sh->fetchAll( $this->conf(
+								self::KEY_CONF_OBJECTS)	&& !$force_array ? \PDO::FETCH_CLASS
+									: \PDO::FETCH_ASSOC ));
 						}
 						else // no cache
 						{
-							return $sh->fetchAll( $this->conf(self::KEY_CONF_OBJECTS) && !$force_array
-								? \PDO::FETCH_CLASS : \PDO::FETCH_ASSOC );
+							return $sh->fetchAll( $this->conf(self::KEY_CONF_OBJECTS)
+								&& !$force_array ? \PDO::FETCH_CLASS : \PDO::FETCH_ASSOC );
 						}
 					}
 					else if($force_query_type === self::QUERY_TYPE_AFFECTED

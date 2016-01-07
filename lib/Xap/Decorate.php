@@ -1,10 +1,10 @@
 <?php
 /**
- * Xap - MySQL Rapid Development Engine for PHP 5.5.0+
+ * Xap - MySQL Rapid Development Engine for PHP 5.5+
  *
  * @package Xap
- * @version 0.0.7
- * @copyright 2015 Shay Anderson <http://www.shayanderson.com>
+ * @version 0.0.8
+ * @copyright 2016 Shay Anderson <http://www.shayanderson.com>
  * @license MIT License <http://www.opensource.org/licenses/mit-license.php>
  * @link <https://github.com/shayanderson/xap>
  */
@@ -13,7 +13,7 @@ namespace Xap;
 /**
  * Decorate class - decorate strings and data
  *
- * @author Shay Anderson 08.14 <http://www.shayanderson.com/contact>
+ * @author Shay Anderson <http://www.shayanderson.com/contact>
  */
 class Decorate
 {
@@ -42,7 +42,8 @@ class Decorate
 	{
 		$str = $decorator;
 
-		preg_replace_callback(self::PATTERN_VAR_PLACEHOLDER, function($m) use(&$data, &$str, &$filters)
+		preg_replace_callback(self::PATTERN_VAR_PLACEHOLDER, function($m) use(&$data, &$str,
+			&$filters)
 		{
 			if(isset($m[1]) || array_key_exists(1, $m))
 			{
@@ -128,11 +129,13 @@ class Decorate
 	{
 		if(is_scalar($string))
 		{
-			preg_replace_callback(self::PATTERN_VAR_PLACEHOLDER, function($m) use(&$string, &$decorator, &$filters)
+			preg_replace_callback(self::PATTERN_VAR_PLACEHOLDER, function($m) use(&$string,
+				&$decorator, &$filters)
 			{
 				if(isset($m[2])) // callable filter
 				{
-					if(isset($filters[$m[2]]) && is_callable($filters[$m[2]])) // apply callable filter
+					// apply callable filter
+					if(isset($filters[$m[2]]) && is_callable($filters[$m[2]]))
 					{
 						$decorator = str_replace($m[0], $filters[$m[2]]($string), $decorator);
 					}

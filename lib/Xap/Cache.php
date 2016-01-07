@@ -1,10 +1,10 @@
 <?php
 /**
- * Xap - MySQL Rapid Development Engine for PHP 5.5.0+
+ * Xap - MySQL Rapid Development Engine for PHP 5.5+
  *
  * @package Xap
- * @version 0.0.7
- * @copyright 2015 Shay Anderson <http://www.shayanderson.com>
+ * @version 0.0.8
+ * @copyright 2016 Shay Anderson <http://www.shayanderson.com>
  * @license MIT License <http://www.opensource.org/licenses/mit-license.php>
  * @link <https://github.com/shayanderson/xap>
  */
@@ -13,7 +13,7 @@ namespace Xap;
 /**
  * Xap Cache class
  *
- * @author Shay Anderson 08.14 <http://www.shayanderson.com/contact>
+ * @author Shay Anderson <http://www.shayanderson.com/contact>
  */
 class Cache
 {
@@ -128,7 +128,8 @@ class Cache
 		}
 
 		return ( self::$__key_prefix !== null ? self::$__key_prefix . '-' : '' )
-			. sha1($connection_id . $query . ( is_array($query_params) ? implode('', $query_params) : null ));
+			. sha1($connection_id . $query . ( is_array($query_params)
+			? implode('', $query_params) : null ));
 	}
 
 	/**
@@ -260,7 +261,8 @@ class Cache
 		if((bool)self::$use_compression
 			? @file_put_contents(self::$__path . $key,
 				base64_encode(gzcompress(serialize($data))), LOCK_EX) === false
-			: @file_put_contents(self::$__path . $key, base64_encode(serialize($data)), LOCK_EX) === false)
+			: @file_put_contents(self::$__path . $key,
+				base64_encode(serialize($data)), LOCK_EX) === false)
 		{
 			throw new \Exception('Failed to write cache file \'' . self::$__path . $key . '\'');
 		}

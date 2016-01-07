@@ -1,8 +1,8 @@
 # Xap
-#### MySQL Rapid Development Engine for PHP 5.5.0+
+#### MySQL Rapid Development Engine for PHP 5.5+
 Xap requirements:
 
-1. PHP 5.5.0+
+1. PHP 5.5+
 2. PHP [PDO database extension](http://www.php.net/manual/en/book.pdo.php)
 3. Database table names cannot include characters `.`, `/`, `:` or ` ` (whitespace) and cannot start with `[`
 
@@ -238,7 +238,7 @@ $r = xap(':query SELECT * FROM users LIMIT 2');
 // use params with manual query:
 $r = xap(':query SELECT * FROM users WHERE user_id = ?', [2]);
 ```
-> The query command can use these query options: [/query](https://github.com/shayanderson/xap#query-option), [/first](https://github.com/shayanderson/xap#first-option), [/pagination](https://github.com/shayanderson/xap#pagination), [/cache](https://github.com/shayanderson/xap#caching). For example:
+> The query command can use these query options: [/query](https://github.com/shayanderson/xap#query-option), [/first](https://github.com/shayanderson/xap#first-option), [/value](https://github.com/shayanderson/xap#value-option), [/pagination](https://github.com/shayanderson/xap#pagination), [/cache](https://github.com/shayanderson/xap#caching). For example:
 ```php
 $query_string = $r = xap(':query/query SELECT * FROM users LIMIT 2');
 ```
@@ -499,6 +499,16 @@ if($user) echo $user->fullname;
 This can simplify using the first record only instead of having to use:
 ```php
 if(isset($user[0])) echo $user[0]->fullname;
+```
+
+##### Value Option
+The `value` option is used to return the first value only (scalar), for example:
+```php
+$fullname = xap('users(fullname)/value WHERE id = ?', [1]); // string
+```
+If multiple columns are in the query only the first column value is returned, example:
+```php
+$email = xap(':query/value SELECT email, fullname FROM users WHERE id = ?', [1]); // string
 ```
 > Other options not mentioned here are: [`/cache`](https://github.com/shayanderson/xap#caching), [`/pagination`](https://github.com/shayanderson/xap#pagination) and [`/model`](https://github.com/shayanderson/xap#data-modeling)
 

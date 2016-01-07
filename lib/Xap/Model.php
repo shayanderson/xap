@@ -1,10 +1,10 @@
 <?php
 /**
- * Xap - MySQL Rapid Development Engine for PHP 5.5.0+
+ * Xap - MySQL Rapid Development Engine for PHP 5.5+
  *
  * @package Xap
- * @version 0.0.7
- * @copyright 2015 Shay Anderson <http://www.shayanderson.com>
+ * @version 0.0.8
+ * @copyright 2016 Shay Anderson <http://www.shayanderson.com>
  * @license MIT License <http://www.opensource.org/licenses/mit-license.php>
  * @link <https://github.com/shayanderson/xap>
  */
@@ -13,7 +13,7 @@ namespace Xap;
 /**
  * Xap Model class
  *
- * @author Shay Anderson 07.14 <http://www.shayanderson.com/contact>
+ * @author Shay Anderson <http://www.shayanderson.com/contact>
  */
 class Model
 {
@@ -90,8 +90,8 @@ class Model
 	 * @param array $query_params
 	 * @param string $query_sql
 	 */
-	public function __construct(array $columns, $table, $key, $connection_id, $query_params, $query_sql,
-		&$decorator = null, &$decorator_filters = null)
+	public function __construct(array $columns, $table, $key, $connection_id, $query_params,
+		$query_sql, &$decorator = null, &$decorator_filters = null)
 	{
 		$this->__data = array_fill_keys($columns, null);
 		$this->__data[$key] = null; // init primary key column
@@ -152,8 +152,8 @@ class Model
 	public function __toString()
 	{
 		return $this->__decorator !== null && $this->__is_loaded
-			? Decorate::data($this->__data, $this->__decorator, $this->__decorator_filters) : implode(', ',
-			array_filter($this->__data, function($v) { return $v !== null; }));
+			? Decorate::data($this->__data, $this->__decorator, $this->__decorator_filters)
+			: implode(', ', array_filter($this->__data, function($v) { return $v !== null; }));
 	}
 
 	/**
@@ -231,8 +231,8 @@ class Model
 	{
 		$this->__validateKeyValue();
 
-		$r = Engine::exec([$this->__getConnectionStr() . ':query SELECT EXISTS(SELECT 1 FROM ' . $this->__table
-			. $this->__query_sql . ') AS is_record', $this->__query_params]);
+		$r = Engine::exec([$this->__getConnectionStr() . ':query SELECT EXISTS(SELECT 1 FROM '
+			. $this->__table . $this->__query_sql . ') AS is_record', $this->__query_params]);
 
 		if(isset($r[0]))
 		{
@@ -335,8 +335,8 @@ class Model
 
 		$cols = count($this->getColumns()) > 1 ? implode(',', $this->getColumns()) : '*';
 
-		$r = Engine::exec([$this->__getConnectionStr() . ':query SELECT ' . $cols . ' FROM ' . $this->__table
-			. $this->__query_sql, $this->__query_params]);
+		$r = Engine::exec([$this->__getConnectionStr() . ':query SELECT ' . $cols . ' FROM '
+			. $this->__table . $this->__query_sql, $this->__query_params]);
 
 		if(isset($r[0]))
 		{
