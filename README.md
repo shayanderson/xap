@@ -500,6 +500,7 @@ This can simplify using the first record only instead of having to use:
 ```php
 if(isset($user[0])) echo $user[0]->fullname;
 ```
+> The `first` option will auto limit the rows to 1, multiple rows are not allowed
 
 ##### Value Option
 The `value` option is used to return the first value only (scalar), for example:
