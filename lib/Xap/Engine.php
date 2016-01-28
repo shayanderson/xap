@@ -116,6 +116,13 @@ class Engine
 	private $__error;
 
 	/**
+	 * Global select limit
+	 *
+	 * @var int
+	 */
+	private static $__global_limit;
+
+	/**
 	 * Connection ID
 	 *
 	 * @var int
@@ -532,7 +539,7 @@ class Engine
 	 * @staticvar int $connection_id
 	 * @param array $connection
 	 * @return int (connection ID)
-	 * @throws \Exception (when connection ID not int, connection already exists, invalid connection params)
+	 * @throws \Exception (when connection ID not int, connection exists, invalid connection params)
 	 */
 	private static function __setConnection(array $connection)
 	{
@@ -696,10 +703,6 @@ class Engine
 					$params = &$args[0];
 				}
 
-				if($options & self::OPT_QUERY) // query as string
-				{
-					return $q;
-				}
 				// option /model return first record as model object (but not when using table.[id])
 				else if($options & self::OPT_MODEL && !isset($cmd[self::KEY_CMD_ID]))
 				{
@@ -737,6 +740,11 @@ class Engine
 				}
 				else if(isset($p)) // exec query with pagination
 				{
+					if($options & self::OPT_QUERY)
+					{
+						return $q;
+					}
+
 					$r = self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($q, $params,
 						self::QUERY_TYPE_ROWS, $options & self::OPT_CACHE,
 						$options & self::OPT_ARRAY);
@@ -760,6 +768,11 @@ class Engine
 							$q = rtrim(rtrim($q), ';') . ' LIMIT 1';
 						}
 
+						if($options & self::OPT_QUERY)
+						{
+							return $q;
+						}
+
 						$r = self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->query($q, $params,
 							self::QUERY_TYPE_ROWS, $options & self::OPT_CACHE,
 							$options & self::OPT_ARRAY);
@@ -777,8 +790,18 @@ class Engine
 
 						return $decorator !== null ? '' : null; // no record
 					}
-					else
+					else // all records
 					{
+						if(self::$__global_limit !== null && !preg_match('/LIMIT[\s]+[\d]+/i', $q))
+						{
+							$q = rtrim(rtrim($q), ';') . ' LIMIT ' . self::$__global_limit;
+						}
+
+						if($options & self::OPT_QUERY)
+						{
+							return $q;
+						}
+
 						return self::__decorate(self::__getConnection($cmd[self::KEY_CMD_CONN_ID])
 							->query($q, $params, self::QUERY_TYPE_ROWS, $options & self::OPT_CACHE,
 							$options & self::OPT_ARRAY),
@@ -1038,7 +1061,8 @@ class Engine
 								self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->setKey($k, $v);
 							}
 
-							return self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->getKey(null); // return all
+							// return all
+							return self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->getKey(null);
 						}
 
 						$cmd[self::KEY_CMD_SQL] = trim($cmd[self::KEY_CMD_SQL]);
@@ -1050,6 +1074,17 @@ class Engine
 
 						return self::__getConnection($cmd[self::KEY_CMD_CONN_ID])
 							->getKey($cmd[self::KEY_CMD_TABLE]);
+						break;
+
+					case 'limit': // global limit setter
+						if((int)$cmd[self::KEY_CMD_SQL] > 0)
+						{
+							self::$__global_limit = (int)$cmd[self::KEY_CMD_SQL];
+						}
+						else
+						{
+							self::$__global_limit = null; // reset
+						}
 						break;
 
 					case 'log': // log getter
@@ -1131,10 +1166,7 @@ class Engine
 						break;
 
 					case 'query': // manual query
-						if($options & self::OPT_QUERY)
-						{
-							return $cmd[self::KEY_CMD_SQL];
-						}
+						$cmd[self::KEY_CMD_SQL] = trim($cmd[self::KEY_CMD_SQL]);
 
 						if($options & self::OPT_PAGINATION) // apply pagination
 						{
@@ -1152,6 +1184,11 @@ class Engine
 
 						if(isset($p)) // preg pagination data
 						{
+							if($options & self::OPT_QUERY)
+							{
+								return $cmd[self::KEY_CMD_SQL];
+							}
+
 							$r = self::__getConnection($cmd[self::KEY_CMD_CONN_ID])
 								->query($cmd[self::KEY_CMD_SQL], 	isset($args[0])
 									? $args[0] : null, self::QUERY_TYPE_ROWS,
@@ -1176,6 +1213,11 @@ class Engine
 										';') . ' LIMIT 1';
 								}
 
+								if($options & self::OPT_QUERY)
+								{
+									return $cmd[self::KEY_CMD_SQL];
+								}
+
 								$r = self::__getConnection($cmd[self::KEY_CMD_CONN_ID])
 										->query($cmd[self::KEY_CMD_SQL], isset($args[0])
 										? $args[0] : null, 0, $options & self::OPT_CACHE,
@@ -1196,6 +1238,18 @@ class Engine
 							}
 							else // all records
 							{
+								if(self::$__global_limit !== null
+									&& !preg_match('/LIMIT[\s]+[\d]+/i', $cmd[self::KEY_CMD_SQL]))
+								{
+									$cmd[self::KEY_CMD_SQL] = rtrim(rtrim($cmd[self::KEY_CMD_SQL]),
+										';') . ' LIMIT ' . self::$__global_limit;
+								}
+
+								if($options & self::OPT_QUERY)
+								{
+									return $cmd[self::KEY_CMD_SQL];
+								}
+
 								return self::__decorate(
 									self::__getConnection($cmd[self::KEY_CMD_CONN_ID])
 										->query($cmd[self::KEY_CMD_SQL], isset($args[0])

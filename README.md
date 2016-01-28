@@ -28,6 +28,7 @@ Here is a list of Xap commands:
 - [`exists`](https://github.com/shayanderson/xap#records-exist) - check if record exists
 - [`id`](https://github.com/shayanderson/xap#insert-with-insert-id) - get last insert ID
 - [`key`](https://github.com/shayanderson/xap#custom-table-primary-key-column-name) - get/set table primary key column name (default 'id')
+- [`limit`](https://github.com/shayanderson/xap#global-limit) - global max limit for queries
 - [`log`](https://github.com/shayanderson/xap#debug-log) - get debug log (debugging must be turned on)
 - [`log_handler`](https://github.com/shayanderson/xap#custom-log-handler) - add log message to database log (debugging must be turned on)
 - [`mod`](https://github.com/shayanderson/xap#update) - update record(s) (can also use `update`)
@@ -342,6 +343,22 @@ Show table columns query example:
 ```php
 $columns = xap('users:columns'); // returns array of table column names
 ```
+
+#### Global Limit
+A global max limit can be set to force max limits, for example:
+```php
+// the query below may crash if too many records exist (exceeds memory limit)
+$docs = xap('documents'); // SELECT * FROM documents
+// this problem can be solved globally by using global limit
+xap(':limit 50'); // now all select queries auto use limit
+$docs = xap('documents'); // SELECT * FROM documents LIMIT 50
+$users = xap('users'); // SELECT * FROM users LIMIT 50
+// reset limit
+xap(':limit'); // or xap(':limit 0')
+$docs = xap('documents'); // SELECT * FROM documents
+```
+The global limit will *not* override a LIMIT clause already in a query.
+> Global limit will not work with other options like `/first`, `/model`, `/pagination`, `/value`
 
 #### Debug Log
 Get debug log array example:
