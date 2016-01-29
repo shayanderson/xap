@@ -1239,6 +1239,7 @@ class Engine
 							else // all records
 							{
 								if(self::$__global_limit !== null
+									&& preg_match('/^\s*select/i', $cmd[self::KEY_CMD_SQL])
 									&& !preg_match('/LIMIT[\s]+[\d]+/i', $cmd[self::KEY_CMD_SQL]))
 								{
 									$cmd[self::KEY_CMD_SQL] = rtrim(rtrim($cmd[self::KEY_CMD_SQL]),
