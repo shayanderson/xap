@@ -704,7 +704,7 @@ class Engine
 				}
 
 				// option /model return first record as model object (but not when using table.[id])
-				else if($options & self::OPT_MODEL && !isset($cmd[self::KEY_CMD_ID]))
+				if($options & self::OPT_MODEL && !isset($cmd[self::KEY_CMD_ID]))
 				{
 					// LIMIT clause cannot exist in query SQL for model object
 					if(stripos($cmd[self::KEY_CMD_SQL], 'limit') !== false
