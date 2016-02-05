@@ -27,7 +27,6 @@ Here is a list of Xap commands:
 - [`error_last`](https://github.com/shayanderson/xap#get-last-error) - get last error, when error has occurred
 - [`exists`](https://github.com/shayanderson/xap#records-exist) - check if record exists
 - [`id`](https://github.com/shayanderson/xap#insert-with-insert-id) - get last insert ID
-- [`key`](https://github.com/shayanderson/xap#custom-table-primary-key-column-name) - get/set table primary key column name (default 'id')
 - [`limit`](https://github.com/shayanderson/xap#global-limit) - global max limit for queries
 - [`log`](https://github.com/shayanderson/xap#debug-log) - get debug log (debugging must be turned on)
 - [`log_handler`](https://github.com/shayanderson/xap#custom-log-handler) - add log message to database log (debugging must be turned on)
@@ -42,7 +41,6 @@ Here is a list of Xap commands:
 
 Xap supports:
 
-- [Custom primary key name](https://github.com/shayanderson/xap#custom-table-primary-key-column-name)
 - [Custom log handler](https://github.com/shayanderson/xap#custom-log-handler)
 - [Custom error handler](https://github.com/shayanderson/xap#custom-error-handler)
 - [Query options](https://github.com/shayanderson/xap#query-options)
@@ -104,32 +102,6 @@ Select query with question mark parameters:
 $r = xap('users(fullname, email) WHERE is_active = ? AND fullname = ? LIMIT 2',
 	[1, 'Shay Anderson']);
 ```
-
-#### Select with Key
-Select queries with primary key value:
-```php
-$r = xap('users.2'); // SELECT * FROM users WHERE id = '2'
-// test if record exists + display value for column 'fullname'
-if($r) echo $r->fullname;
-
-// using plain SQL in query example
-// SELECT fullname, is_active FROM users WHERE id = '2' AND fullname = 'Shay'
-$r = xap('users(fullname, is_active).2 WHERE fullname = ?', ['Name']);
-```
-> Query options can be used when selecting with key like:
-```php
-$q = xap('users.14/query');
-// or with columns
-$q = xap('users.14(fullname, is_active)/query');
-```
-
-When selecting with key use integer values only, for example:
-```php
-$r = xap('users.' . (int)$id);
-```
-> The default primary key column name is `id`, for using different primary key column name see [custom table primary key column name](https://github.com/shayanderson/xap#custom-table-primary-key-column-name)
-
-<blockquote>Select with key command <i>cannot</i> use commands like <code>:command</code></blockquote>
 
 #### Select Distinct
 Select distinct example query:
@@ -406,29 +378,12 @@ if(xap(':error'))
 > For getting last error message errors must be disabled, otherwise exception is thrown
 
 #### Debugging
-To display all registered connections, mapped keys, debug log and errors use:
+To display all registered connections, debug log and errors use:
 ```php
 print_r( xap(':debug') ); // returns array with debug info
 ```
 
 ## Advanced
-### Custom Table Primary Key Column Name
-By default the primary key column named used when selecting with key is 'id'.
- This can be changed using the 'key' or 'keys' command:
-```php
-// register 'user_id' as primary key column name for table 'users'
-xap('users:key user_id');
-
-// now 'WHERE id = 2' becomes 'WHERE user_id = 2'
-$r = xap('users.2'); // SELECT * FROM users WHERE user_id = '2'
-
-// also register multiple key column names:
-xap(':key', [
-	'users' => 'user_id',
-	'orders' => 'order_id'
-]);
-```
-
 ### Custom Log Handler
 A custom log handler can be used when setting a database connection, for example:
 ```php
@@ -604,7 +559,13 @@ if($user->load()) // load record data
 	echo $user->fullname;
 }
 ```
-> If the table primary key column name is not `id` use [custom table primary key column name](https://github.com/shayanderson/xap#custom-table-primary-key-column-name)
+> If the table primary key column name is not `id` use the `\Xap\Model::setTableKey(table, key_name)` method, for example:
+```php
+\Xap\Model::setTableKey('users', 'user_id'); // must do BEFORE using model
+$user = xap('users/model'); // \Xap\Model object
+$user->user_id = 14;
+$user->load();
+```
 
 This can also be done using:
 ```php

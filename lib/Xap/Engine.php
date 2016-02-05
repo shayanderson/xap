@@ -3,7 +3,7 @@
  * Xap - MySQL Rapid Development Engine for PHP 5.5+
  *
  * @package Xap
- * @version 0.0.8
+ * @version 0.0.9
  * @copyright 2016 Shay Anderson <http://www.shayanderson.com>
  * @license MIT License <http://www.opensource.org/licenses/mit-license.php>
  * @link <https://github.com/shayanderson/xap>
@@ -27,9 +27,9 @@ class Engine
 		DECORATE_TYPE_TEST = 4;
 
 	/**
-	 * Default primary key column name
+	 * Default connection ID
 	 */
-	const DEFAULT_PRIMARY_KEY = 'id';
+	const DEFAULT_CONNECTION_ID = 1;
 
 	/**
 	 * Command part keys
@@ -38,10 +38,9 @@ class Engine
 		KEY_CMD = 1,
 		KEY_CMD_COLUMNS = 2,
 		KEY_CMD_CONN_ID = 3,
-		KEY_CMD_ID = 4,
-		KEY_CMD_OPTIONS = 5,
-		KEY_CMD_SQL = 6,
-		KEY_CMD_TABLE = 7;
+		KEY_CMD_OPTIONS = 4,
+		KEY_CMD_SQL = 5,
+		KEY_CMD_TABLE = 6;
 
 	/**
 	 * Configuration keys
@@ -135,13 +134,6 @@ class Engine
 	 * @var boolean
 	 */
 	private static $__is_logging = true;
-
-	/**
-	 * Table name to primary key column name map
-	 *
-	 * @var array
-	 */
-	private $__key_map;
 
 	/**
 	 * Debug log
@@ -446,7 +438,7 @@ class Engine
 	{
 		$c = [ // init defaults
 			self::KEY_CMD_COLUMNS => '*',
-			self::KEY_CMD_CONN_ID => 1, // default ID
+			self::KEY_CMD_CONN_ID => self::DEFAULT_CONNECTION_ID, // default ID
 			self::KEY_CMD_OPTIONS => '',
 			self::KEY_CMD_SQL => '',
 			self::KEY_CMD_TABLE => ''
@@ -484,12 +476,6 @@ class Engine
 			$c[self::KEY_CMD] = $m[1];
 			$cmd = substr($cmd, strlen($m[1]) + 1, strlen($cmd)); // rm cmd
 		}
-		// test for select ID: '.1'
-		else if($cmd[0] === '.' && preg_match('/^\.([\d]+)/', $cmd, $m))
-		{
-			$c[self::KEY_CMD_ID] = $m[1];
-			$cmd = substr($cmd, strlen($m[1]) + 1, strlen($cmd)); // rm select ID
-		}
 
 		// test for options: '/opt1/opt2'
 		if($cmd[0] === '/' && preg_match('/^\/([\w\/]+)/', $cmd, $m)) // match '/opt1/opt2'
@@ -504,25 +490,6 @@ class Engine
 		if(!empty($cmd))
 		{
 			$c[self::KEY_CMD_SQL] = $cmd;
-		}
-
-		if(isset($c[self::KEY_CMD_ID]) && isset($c[self::KEY_CMD_TABLE])) // add select ID to SQL
-		{
-			$sql = 'WHERE '
-				. self::__getConnection($c[self::KEY_CMD_CONN_ID])->getKey($c[self::KEY_CMD_TABLE])
-				. '=' . self::__getConnection($c[self::KEY_CMD_CONN_ID])->__getPdo()
-					->quote($c[self::KEY_CMD_ID]);
-
-			// WHERE exists in SQL
-			if(strcasecmp(substr($c[self::KEY_CMD_SQL], 0, 5), 'where') === 0)
-			{
-				// rm WHERE, add AND
-				$c[self::KEY_CMD_SQL] = $sql . ' AND ' . trim(substr($c[self::KEY_CMD_SQL], 5));
-			}
-			else
-			{
-				$c[self::KEY_CMD_SQL] = $sql . $c[self::KEY_CMD_SQL];
-			}
 		}
 
 		if(!empty($c[self::KEY_CMD_SQL]))
@@ -704,7 +671,7 @@ class Engine
 				}
 
 				// option /model return first record as model object (but not when using table.[id])
-				if($options & self::OPT_MODEL && !isset($cmd[self::KEY_CMD_ID]))
+				if($options & self::OPT_MODEL)
 				{
 					// LIMIT clause cannot exist in query SQL for model object
 					if(stripos($cmd[self::KEY_CMD_SQL], 'limit') !== false
@@ -722,18 +689,16 @@ class Engine
 					}
 
 					$cmd[self::KEY_CMD_SQL] = ' WHERE ' // add record key = :[key]
-							. self::__getConnection($cmd[self::KEY_CMD_CONN_ID])
-								->getKey($cmd[self::KEY_CMD_TABLE])
+							. Model::getTableKey($cmd[self::KEY_CMD_TABLE],
+								$cmd[self::KEY_CMD_CONN_ID])
 							. '=:'
-							. self::__getConnection($cmd[self::KEY_CMD_CONN_ID])
-								->getKey($cmd[self::KEY_CMD_TABLE])
+							. Model::getTableKey($cmd[self::KEY_CMD_TABLE],
+								$cmd[self::KEY_CMD_CONN_ID])
 							. $cmd[self::KEY_CMD_SQL];
 
 					return new Model($cmd[self::KEY_CMD_COLUMNS] === '*' ? []
 						: array_map('trim', explode(',', $cmd[self::KEY_CMD_COLUMNS])), // columns
 						$cmd[self::KEY_CMD_TABLE], // table
-						self::__getConnection($cmd[self::KEY_CMD_CONN_ID])
-							->getKey($cmd[self::KEY_CMD_TABLE]), // key
 						// connection ID, params, sql
 						$cmd[self::KEY_CMD_CONN_ID], $params, $cmd[self::KEY_CMD_SQL],
 						$decorator, $decorator_filters); // decorator
@@ -759,9 +724,8 @@ class Engine
 				}
 				else // exec query
 				{
-					// select ID or /first option or /value option, return first row only
-					if(isset($cmd[self::KEY_CMD_ID]) || $options & self::OPT_FIRST
-						|| $options & self::OPT_VALUE)
+					// select /first option or /value option, return first row only
+					if($options & self::OPT_FIRST || $options & self::OPT_VALUE)
 					{
 						if(!preg_match('/LIMIT[\s]+[\d]+/i', $q))
 						{
@@ -984,7 +948,6 @@ class Engine
 						{
 							$d[$k] = [
 								'conf' => self::__getConnection($k)->conf(null),
-								'keys' => self::__getConnection($k)->getKey(null),
 								'log' => self::__getConnection($k)->getLog()
 							];
 						}
@@ -1051,29 +1014,6 @@ class Engine
 							self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->__getPdo()
 								->lastInsertId(), $decorator, $decorator_filters,
 									self::DECORATE_TYPE_TEST);
-						break;
-
-					case 'key': // table primary key column name getter/setter
-						if(isset($args[0]) && is_array($args[0])) // array setter
-						{
-							foreach($args[0] as $k => $v)
-							{
-								self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->setKey($k, $v);
-							}
-
-							// return all
-							return self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->getKey(null);
-						}
-
-						$cmd[self::KEY_CMD_SQL] = trim($cmd[self::KEY_CMD_SQL]);
-						if(strlen($cmd[self::KEY_CMD_SQL]) > 0) // setter
-						{
-							self::__getConnection($cmd[self::KEY_CMD_CONN_ID])
-								->setKey($cmd[self::KEY_CMD_TABLE],	$cmd[self::KEY_CMD_SQL]);
-						}
-
-						return self::__getConnection($cmd[self::KEY_CMD_CONN_ID])
-							->getKey($cmd[self::KEY_CMD_TABLE]);
 						break;
 
 					case 'limit': // global limit setter
@@ -1322,27 +1262,6 @@ class Engine
 	}
 
 	/**
-	 * Table primary key column name(s) getter
-	 *
-	 * @param mixed $table (string for table, null for get all)
-	 * @return mixed (string for key, array for get all)
-	 */
-	public function getKey($table)
-	{
-		if(is_null($table)) // get all
-		{
-			return $this->__key_map;
-		}
-
-		if(isset($this->__key_map[$table]))
-		{
-			return $this->__key_map[$table];
-		}
-
-		return self::DEFAULT_PRIMARY_KEY;
-	}
-
-	/**
 	 * Debug log getter
 	 *
 	 * @return array
@@ -1450,20 +1369,5 @@ class Engine
 		}
 
 		return false;
-	}
-
-	/**
-	 * Table primary key column name setter
-	 *
-	 * @param string $table
-	 * @param string $key
-	 * @return void
-	 */
-	public function setKey($table, $key)
-	{
-		if(!empty($key))
-		{
-			$this->__key_map[$table] = $key;
-		}
 	}
 }

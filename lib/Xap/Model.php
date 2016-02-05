@@ -3,7 +3,7 @@
  * Xap - MySQL Rapid Development Engine for PHP 5.5+
  *
  * @package Xap
- * @version 0.0.8
+ * @version 0.0.9
  * @copyright 2016 Shay Anderson <http://www.shayanderson.com>
  * @license MIT License <http://www.opensource.org/licenses/mit-license.php>
  * @link <https://github.com/shayanderson/xap>
@@ -17,6 +17,11 @@ namespace Xap;
  */
 class Model
 {
+	/**
+	 * Default primary key column name
+	 */
+	const DEFAULT_KEY_NAME = 'id';
+
 	/**
 	 * Connection ID
 	 *
@@ -60,6 +65,13 @@ class Model
 	private $__key;
 
 	/**
+	 * Table primary key names
+	 *
+	 * @var array
+	 */
+	private static $__key_map = [];
+
+	/**
 	 * Query params
 	 *
 	 * @var array
@@ -85,18 +97,17 @@ class Model
 	 *
 	 * @param array $columns
 	 * @param string $table
-	 * @param string $key
 	 * @param int $connection_id
 	 * @param array $query_params
 	 * @param string $query_sql
 	 */
-	public function __construct(array $columns, $table, $key, $connection_id, $query_params,
-		$query_sql, &$decorator = null, &$decorator_filters = null)
+	public function __construct(array $columns, $table, $connection_id, $query_params, $query_sql,
+		&$decorator = null, &$decorator_filters = null)
 	{
 		$this->__data = array_fill_keys($columns, null);
-		$this->__data[$key] = null; // init primary key column
+		$this->__data[self::getTableKey($table, $connection_id)] = null; // init primary key column
 		$this->__table = $table;
-		$this->__key = $key;
+		$this->__key = self::getTableKey($table, $connection_id);
 		$this->__connection_id = $connection_id;
 		$this->__query_params = $query_params;
 		$this->__query_sql = rtrim(rtrim($query_sql), ';') . ' LIMIT 1';
@@ -293,6 +304,28 @@ class Model
 	}
 
 	/**
+	 * Table primary key name getter
+	 *
+	 * @param string $table
+	 * @param mixed $connection_id
+	 * @return string
+	 */
+	public static function getTableKey($table, $connection_id = null)
+	{
+		if($connection_id === null)
+		{
+			$connection_id = Engine::DEFAULT_CONNECTION_ID;
+		}
+
+		if(isset(self::$__key_map[$connection_id][$table]))
+		{
+			return self::$__key_map[$connection_id][$table];
+		}
+
+		return self::DEFAULT_KEY_NAME;
+	}
+
+	/**
 	 * Column exists in model flag getter
 	 *
 	 * @param string $name
@@ -397,5 +430,26 @@ class Model
 		}
 
 		return $is_set;
+	}
+
+	/**
+	 * Table primary key name setter
+	 *
+	 * @param string $table
+	 * @param string $key_name
+	 * @param mixed $connection_id
+	 * @return void
+	 */
+	public static function setTableKey($table, $key_name, $connection_id = null)
+	{
+		if(!empty($key_name))
+		{
+			if($connection_id === null)
+			{
+				$connection_id = Engine::DEFAULT_CONNECTION_ID;
+			}
+
+			self::$__key_map[$connection_id][$table] = $key_name;
+		}
 	}
 }
