@@ -32,6 +32,13 @@ class Pagination
 	public static $conf_html_prev = '<a href="{$uri}">&laquo; Previous</a>';
 
 	/**
+	 * Previous page range HTML wrapper
+	 *
+	 * @var string
+	 */
+	public static $conf_html_prev_page_range = '<a href="{$uri}">{$number}</a>';
+
+	/**
 	 * Append HTML wrapper
 	 *
 	 * @var string
@@ -51,6 +58,20 @@ class Pagination
 	 * @var string
 	 */
 	public static $conf_page_get_var = 'pg';
+
+	/**
+	 * Use previous page range flag
+	 *
+	 * @var boolean
+	 */
+	public static $conf_prev_page_range = false;
+
+	/**
+	 * Previous page range max page numbers to display
+	 *
+	 * @var int
+	 */
+	public static $conf_prev_page_range_count = 5;
 
 	/**
 	 * Pagination HTML
@@ -108,6 +129,18 @@ class Pagination
 					{
 						$this->html .= str_replace('{$uri}',
 							$this->__getAutoUri($this->pagination->prev), self::$conf_html_prev);
+					}
+
+					// previous page range
+					if(self::$conf_prev_page_range && $this->pagination->prev > 1)
+					{
+						foreach(array_slice(range(1, $this->pagination->prev),
+							-self::$conf_prev_page_range_count) as $v)
+						{
+							$this->html .= str_replace('{$uri}',
+								$this->__getAutoUri($v == 1 ? null : $v),
+								str_replace('{$number}', $v, self::$conf_html_prev_page_range));
+						}
 					}
 				}
 

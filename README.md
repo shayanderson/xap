@@ -575,6 +575,20 @@ HTML can be added to style the controls:
 // then use object
 $pagination = new \Xap\Pagination(xap('users/pagination'));
 ```
+A previous page numbers range can be displayed, for example:
+```php
+// enable
+\Xap\Pagination::$conf_prev_page_range = true;
+// optional, set total number of page numbers to display (default is 5)
+// \Xap\Pagination::$conf_prev_page_range_count = 5;
+
+// set HTML wrapper
+\Xap\Pagination::$conf_html_prev_page_range = '<li><a href="{$uri}">{$number}</a></li>';
+
+// then use object
+$pagination = new \Xap\Pagination(xap('users/pagination'));
+```
+
 > When setting the pagination object there is an option to set the first URI, meaning the URI used for the first page (when no more previous pages are availble), for example:
 ```php
 $pagination = new \Xap\Pagination(xap('users/pagination', '/user/view'));
