@@ -34,10 +34,10 @@ xap([
 	// 'log_handler' => null // optional log handler (callable)
 ]);
 
-// set global pagination records per page (default 10)
-// xap(':pagination', ['rpp' => 10]);
+// set global pagination records per page (default 10) + current page number
+// xap(':pagination', ['rpp' => 10, 'page' => isset($_GET['pg']) ? (int)$_GET['pg'] : 1]);
 
 // set global cache settings
 // \Xap\Cache::setExpireGlobal('10 seconds'); // global cache expire time (default '30 seconds')
 // \Xap\Cache::setPath('/var/www/app/cache'); // global cache directory path
-// \Xap\Cache::$use_compression = false; // globally turn off cache file compression (enabled by default)
+// \Xap\Cache::$use_compression = false; // disable cache file compression (enabled by default)

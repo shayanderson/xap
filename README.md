@@ -46,6 +46,7 @@ Xap supports:
 - [Query options](https://github.com/shayanderson/xap#query-options)
 - [Multiple database connections](https://github.com/shayanderson/xap#multiple-database-connections)
 - [Pagination](https://github.com/shayanderson/xap#pagination)
+- [Pagination Helper Class](https://github.com/shayanderson/xap#pagination-helper-class)
 - [Data Modeling (ORM)](https://github.com/shayanderson/xap#data-modeling)
 - [Data Decorators](https://github.com/shayanderson/xap#data-decorators)
 - [Caching](https://github.com/shayanderson/xap#caching)
@@ -265,9 +266,9 @@ $r = xap(':query SELECT @out;');
 The `call` command will return a `boolean` value. If a recordset `array` or affected rows `integer` is required instead use:
 ```php
 // get recordset:
-$rows = xap(':call_rows sp_getActiveUsers'); // array
+$rows = xap(':call rows sp_getActiveUsers'); // array
 // or get affected rows count:
-$affected = xap(':call_affected sp_updateUser'); // integer
+$affected = xap(':call affected sp_updateUser'); // integer
 ```
 > Query options can be used with the `call` command like: `xap(':call/query sp_name');`
 
@@ -544,6 +545,41 @@ if($r['pagination']->prev > 0)
 ```
 **Note:** Pagination can also use [decorators](https://github.com/shayanderson/xap#decorators-with-pagination).
 > Pagination only works on select commands like `users(id, fullname)/pagination` and select queries like `:query/pagination SELECT id, fullname FROM users`
+
+### Pagination Helper Class
+> Before reading this section read the [Pagination section](https://github.com/shayanderson/xap#pagination)
+
+The `\Xap\Pagination` helper class can be used to simplify pagination, for example:
+```php
+// set GET var name for current page if not the default 'pg'
+// \Xap\Pagination::$conf_page_get_var = 'pg';
+
+// set object
+$pagination = new \Xap\Pagination(xap('users/pagination'));
+
+foreach($pagination->rows as $v) // access rows
+
+// print pagination controls
+echo $pagination;
+```
+HTML can be added to style the controls:
+```php
+// change default link HTML
+\Xap\Pagination::$conf_html_next = '<li><a href="{$uri}">Next &raquo;</a></li>';
+\Xap\Pagination::$conf_html_prev = '<li><a href="{$uri}">&laquo; Previous</a></li>';
+
+// HTML wrapper around all controls
+\Xap\Pagination::$conf_html_wrapper_before = '<div class="pagination"><ul>';
+\Xap\Pagination::$conf_html_wrapper_after = '</ul></div>';
+
+// then use object
+$pagination = new \Xap\Pagination(xap('users/pagination'));
+```
+> When setting the pagination object there is an option to set the first URI, meaning the URI used for the first page (when no more previous pages are availble), for example:
+```php
+$pagination = new \Xap\Pagination(xap('users/pagination', '/user/view'));
+```
+This does not need to be set because the pagination object uses auto first URI logic - but that can be overridden by using the option above
 
 ### Data Modeling
 Data Modeling (or ORM) can be used in Xap. First, ensure the `\Xap\Model` class is included in the `xap.bootstrap.php` file:
