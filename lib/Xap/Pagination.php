@@ -39,6 +39,13 @@ class Pagination
 	public static $conf_html_prev_page_range = '<a href="{$uri}">{$number}</a>';
 
 	/**
+	 * Previous page range active HTML wrapper
+	 *
+	 * @var string
+	 */
+	public static $conf_html_prev_page_range_active = '{$number}';
+
+	/**
 	 * Append HTML wrapper
 	 *
 	 * @var string
@@ -60,6 +67,13 @@ class Pagination
 	public static $conf_page_get_var = 'pg';
 
 	/**
+	 * Page number filter
+	 *
+	 * @var callable
+	 */
+	public static $conf_page_num_filter;
+
+	/**
 	 * Use previous page range flag
 	 *
 	 * @var boolean
@@ -78,14 +92,14 @@ class Pagination
 	 *
 	 * @var string
 	 */
-	public $html;
+	public $pagination;
 
 	/**
-	 * Pagination object
+	 * Original pagination data
 	 *
 	 * @var \stdClass
 	 */
-	public $pagination;
+	public $pagination_data;
 
 	/**
 	 * Row data
@@ -98,16 +112,19 @@ class Pagination
 	 * Init
 	 *
 	 * @param array $xap_data (['pagination' => [...], 'rows' => [...]])
+	 * @param boolean $use_page_range
+	 * @param int $page_range_count
 	 * @param string $uri_first (optional override auto URI first, ex: '/item/view')
 	 */
-	public function __construct($xap_data, $uri_first = null)
+	public function __construct($xap_data, $use_page_range = false, $page_range_count = 0,
+		$uri_first = null)
 	{
 		if(isset($xap_data['pagination'], $xap_data['rows']))
 		{
 			$this->rows = &$xap_data['rows'];
-			$this->pagination = &$xap_data['pagination'];
+			$this->pagination_data = &$xap_data['pagination'];
 
-			$this->html = '';
+			$this->pagination = '';
 
 			if($uri_first === null)
 			{
@@ -115,42 +132,51 @@ class Pagination
 			}
 
 			// only set HTML if pagination controls need to exist
-			if($this->pagination->next > 0 || $this->pagination->prev > 0)
+			if($this->pagination_data->next > 0 || $this->pagination_data->prev > 0)
 			{
-				$this->html = self::$conf_html_wrapper_before;
+				$this->pagination = self::$conf_html_wrapper_before;
 
-				if($this->pagination->prev > 0)
+				if($this->pagination_data->prev > 0)
 				{
-					if($this->pagination->prev === 1) // first
+					if($this->pagination_data->prev === 1) // first
 					{
-						$this->html .= str_replace('{$uri}', $uri_first, self::$conf_html_prev);
+						$this->pagination .= str_replace('{$uri}', $uri_first,
+							self::$conf_html_prev);
 					}
 					else // all other
 					{
-						$this->html .= str_replace('{$uri}',
-							$this->__getAutoUri($this->pagination->prev), self::$conf_html_prev);
+						$this->pagination .= str_replace('{$uri}',
+							$this->__getAutoUri($this->pagination_data->prev),
+							self::$conf_html_prev);
 					}
 
 					// previous page range
-					if(self::$conf_prev_page_range && $this->pagination->prev > 1)
+					if((self::$conf_prev_page_range || $use_page_range)
+						&& $this->pagination_data->prev > 1)
 					{
-						foreach(array_slice(range(1, $this->pagination->prev),
-							-self::$conf_prev_page_range_count) as $v)
+						foreach(array_slice(range(1, $this->pagination_data->prev),
+							(int)$page_range_count > 0 ? -(int)$page_range_count
+								: -(int)self::$conf_prev_page_range_count) as $v)
 						{
-							$this->html .= str_replace('{$uri}',
+							$this->pagination .= str_replace('{$uri}',
 								$this->__getAutoUri($v == 1 ? null : $v),
 								str_replace('{$number}', $v, self::$conf_html_prev_page_range));
 						}
+
+						// add active page
+						$this->pagination .= str_replace('{$number}', $this->pagination_data->page,
+							self::$conf_html_prev_page_range_active);
 					}
 				}
 
-				if($this->pagination->next > 0)
+				if($this->pagination_data->next > 0)
 				{
-					$this->html .= str_replace('{$uri}',
-							$this->__getAutoUri($this->pagination->next), self::$conf_html_next);
+					$this->pagination .= str_replace('{$uri}',
+							$this->__getAutoUri($this->pagination_data->next),
+						self::$conf_html_next);
 				}
 
-				$this->html .= self::$conf_html_wrapper_after;
+				$this->pagination .= self::$conf_html_wrapper_after;
 			}
 		}
 	}
@@ -179,6 +205,12 @@ class Pagination
 
 				if($page_num > 0) // add page num
 				{
+					if(self::$conf_page_num_filter !== null)
+					{
+						$f = &self::$conf_page_num_filter;
+						$page_num = $f($page_num);
+					}
+
 					$qs[self::$conf_page_get_var] = $page_num;
 				}
 
@@ -189,6 +221,12 @@ class Pagination
 			}
 			else if($page_num > 0) // add page num
 			{
+				if(self::$conf_page_num_filter !== null)
+				{
+					$f = &self::$conf_page_num_filter;
+					$page_num = $f($page_num);
+				}
+
 				$url['path'] .= '?' .http_build_query([self::$conf_page_get_var => $page_num]);
 			}
 
@@ -206,6 +244,6 @@ class Pagination
 	 */
 	public function __toString()
 	{
-		return $this->html;
+		return $this->pagination;
 	}
 }
