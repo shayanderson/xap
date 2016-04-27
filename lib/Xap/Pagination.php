@@ -88,6 +88,13 @@ class Pagination
 	public static $conf_prev_page_range_count = 5;
 
 	/**
+	 * Rows exist flag
+	 *
+	 * @var boolean
+	 */
+	public $has_rows = false;
+
+	/**
 	 * Pagination HTML
 	 *
 	 * @var string
@@ -123,6 +130,11 @@ class Pagination
 		{
 			$this->rows = &$xap_data['rows'];
 			$this->pagination_data = &$xap_data['pagination'];
+
+			if(count($this->rows) > 0)
+			{
+				$this->has_rows = true;
+			}
 
 			$this->pagination = '';
 

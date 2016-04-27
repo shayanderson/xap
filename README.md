@@ -557,10 +557,13 @@ The `\Xap\Pagination` helper class can be used to simplify pagination, for examp
 // set object
 $pagination = new \Xap\Pagination(xap('users/pagination'));
 
-foreach($pagination->rows as $v) // access rows
+if($pagination->has_rows)
+{
+	foreach($pagination->rows as $v) // access rows
 
-// print pagination controls
-echo $pagination;
+	// print pagination controls
+	echo $pagination;
+}
 ```
 HTML can be added to style the controls:
 ```php
@@ -584,6 +587,8 @@ A previous page numbers range can be displayed, for example:
 
 // set HTML wrapper
 \Xap\Pagination::$conf_html_prev_page_range = '<li><a href="{$uri}">{$number}</a></li>';
+// set active page HTML
+Pagination::$conf_html_prev_page_range_active = '<a href="#">{$number}</a>';
 
 // then use object
 $pagination = new \Xap\Pagination(xap('users/pagination'), true); // enable for this object only
