@@ -73,7 +73,7 @@ require_once './xap.bootstrap.php';
 
 Now execute SELECT query:
 ```php
-$user = xap('users.14'); // same as "SELECT * FROM users WHERE id = '14'"
+$user = xap('users WHERE id = ?', [14]); // same as "SELECT * FROM users WHERE id = '14'"
 if($user) echo $user->fullname; // print record column value
 ```
 
