@@ -578,6 +578,10 @@ HTML can be added to style the controls:
 // then use object
 $pagination = new \Xap\Pagination(xap('users/pagination'));
 ```
+The URI can be appended with `#jump-here` by using:
+```php
+$pagination = new \Xap\Pagination(xap('users/pagination', '#jump-here'));
+```
 A previous page numbers range can be displayed, for example:
 ```php
 // optional, globally enable
@@ -588,12 +592,12 @@ A previous page numbers range can be displayed, for example:
 // set HTML wrapper
 \Xap\Pagination::$conf_html_prev_page_range = '<li><a href="{$uri}">{$number}</a></li>';
 // set active page HTML
-Pagination::$conf_html_prev_page_range_active = '<a href="#">{$number}</a>';
+\Xap\Pagination::$conf_html_prev_page_range_active = '<a href="#">{$number}</a>';
 
 // then use object
-$pagination = new \Xap\Pagination(xap('users/pagination'), true); // enable for this object only
+$pagination = new \Xap\Pagination(xap('users/pagination'), null, true); // enable for this object only
 // optonal, set page numbers to display for object only
-// $pagination = new \Xap\Pagination(xap('users/pagination'), true, 10);
+// $pagination = new \Xap\Pagination(xap('users/pagination'), null, true, 10);
 ```
 A page number filter can be used to modify page numbers, for example:
 ```php
@@ -604,7 +608,7 @@ A page number filter can be used to modify page numbers, for example:
 
 > When setting the pagination object there is an option to set the first URI, meaning the URI used for the first page (when no more previous pages are availble), for example:
 ```php
-$pagination = new \Xap\Pagination(xap('users/pagination', false, 0, '/user/view'));
+$pagination = new \Xap\Pagination(xap('users/pagination', null, false, 0, '/user/view'));
 ```
 This does not need to be set because the pagination object uses auto first URI logic - but that can be overridden by using the option above
 

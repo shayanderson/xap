@@ -118,12 +118,13 @@ class Pagination
 	 * Init
 	 *
 	 * @param array $xap_data (['pagination' => [...], 'rows' => [...]])
+	 * @param string $append_uri
 	 * @param boolean $use_page_range
 	 * @param int $page_range_count
 	 * @param string $uri_first (optional override auto URI first, ex: '/item/view')
 	 */
-	public function __construct($xap_data, $use_page_range = false, $page_range_count = 0,
-		$uri_first = null)
+	public function __construct($xap_data, $append_uri = null, $use_page_range = false,
+		$page_range_count = 0, $uri_first = null)
 	{
 		if(isset($xap_data['pagination'], $xap_data['rows']))
 		{
@@ -151,13 +152,13 @@ class Pagination
 				{
 					if($this->pagination_data->prev === 1) // first
 					{
-						$this->pagination .= str_replace('{$uri}', $uri_first,
+						$this->pagination .= str_replace('{$uri}', $uri_first . $append_uri,
 							self::$conf_html_prev);
 					}
 					else // all other
 					{
 						$this->pagination .= str_replace('{$uri}',
-							$this->__getAutoUri($this->pagination_data->prev),
+							$this->__getAutoUri($this->pagination_data->prev) . $append_uri,
 							self::$conf_html_prev);
 					}
 
@@ -170,7 +171,7 @@ class Pagination
 								: -(int)self::$conf_prev_page_range_count) as $v)
 						{
 							$this->pagination .= str_replace('{$uri}',
-								$this->__getAutoUri($v == 1 ? null : $v),
+								$this->__getAutoUri($v == 1 ? null : $v) . $append_uri,
 								str_replace('{$number}', $v, self::$conf_html_prev_page_range));
 						}
 
@@ -183,7 +184,7 @@ class Pagination
 				if($this->pagination_data->next > 0)
 				{
 					$this->pagination .= str_replace('{$uri}',
-							$this->__getAutoUri($this->pagination_data->next),
+							$this->__getAutoUri($this->pagination_data->next) . $append_uri,
 						self::$conf_html_next);
 				}
 
