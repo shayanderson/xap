@@ -477,7 +477,7 @@ class Engine
 		}
 
 		// test for options: '/opt1/opt2'
-		if($cmd[0] === '/' && preg_match('/^\/([\w\/]+)/', $cmd, $m)) // match '/opt1/opt2'
+		if($cmd && $cmd[0] === '/' && preg_match('/^\/([\w\/]+)/', $cmd, $m)) // match '/opt1/opt2'
 		{
 			$c[self::KEY_CMD_OPTIONS] = explode('/', $m[1]);
 			$cmd = substr($cmd, strlen($m[1]) + 1, strlen($cmd)); // rm options
