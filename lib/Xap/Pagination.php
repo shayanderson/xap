@@ -4,7 +4,7 @@
  *
  * @package Xap
  * @copyright 2016 Shay Anderson <http://www.shayanderson.com>
- * @license MIT License <http://www.opensource.org/licenses/mit-license.php>
+ * @license MIT License <https://github.com/shayanderson/xap/blob/master/LICENSE>
  * @link <https://github.com/shayanderson/xap>
  */
 namespace Xap;
