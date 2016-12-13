@@ -266,9 +266,9 @@ $r = xap(':query SELECT @out;');
 The `call` command will return a `boolean` value. If a recordset `array` or affected rows `integer` is required instead use:
 ```php
 // get recordset:
-$rows = xap(':call rows sp_getActiveUsers'); // array
+$rows = xap(':call_rows sp_getActiveUsers'); // array
 // or get affected rows count:
-$affected = xap(':call affected sp_updateUser'); // integer
+$affected = xap(':call_affected sp_updateUser'); // integer
 ```
 > Query options can be used with the `call` command like: `xap(':call/query sp_name');`
 
