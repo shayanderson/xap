@@ -18,6 +18,7 @@ Here is a list of Xap commands:
 - [`add`](https://github.com/shayanderson/xap#insert) - insert record (can also use `insert`)
 - [`call`](https://github.com/shayanderson/xap#call-stored-procedurefunction-routines) - call stored procedure or function (and [`call_affected`](https://github.com/shayanderson/xap#call-stored-procedurefunction-routines) and [`call_rows`](https://github.com/shayanderson/xap#call-stored-procedurefunction-routines))
 - [`cache`](https://github.com/shayanderson/xap#caching) - set single cache expire time
+- [`close`](https://github.com/shayanderson/xap#close-connection) - close the database connection
 - [`columns`](https://github.com/shayanderson/xap#show-table-columns) - show table columns
 - [`commit`](https://github.com/shayanderson/xap#transactions) - commit transaction
 - [`count`](https://github.com/shayanderson/xap#count-query) - count table records
@@ -382,6 +383,12 @@ if(xap(':error'))
 To display all registered connections, debug log and errors use:
 ```php
 print_r( xap(':debug') ); // returns array with debug info
+```
+
+#### Close Connection
+A database connection can be closed using the close command:
+```php
+xap(':close');
 ```
 
 ## Advanced

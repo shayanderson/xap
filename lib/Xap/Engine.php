@@ -184,6 +184,14 @@ class Engine
 	}
 
 	/**
+	 * Close the DB connection
+	 */
+	public function __close()
+	{
+		$this->__pdo = null;
+	}
+
+	/**
 	 * Decorate command data
 	 *
 	 * @param mixed $data
@@ -885,6 +893,10 @@ class Engine
 						{
 							Cache::setExpire($cmd[self::KEY_CMD_SQL]);
 						}
+						break;
+
+					case 'close': // close the connection
+						self::__getConnection($cmd[self::KEY_CMD_CONN_ID])->__close();
 						break;
 
 					case 'columns': // show table columns
