@@ -390,6 +390,13 @@ A database connection can be closed using the close command:
 ```php
 xap(':close');
 ```
+> All database connections will automatically close, but the close command can be used explicitly when runtime between database calls exceeds the connection timeout - and can eliminate errors like `server has gone away`, for example:
+```php
+xap(':call spProcessQueue'); // long runtime
+xap(':close'); // close connection
+// below query will automatically open new connection
+xap('job_queue:count WHERE status = 0');
+```
 
 ## Advanced
 ### Custom Log Handler
